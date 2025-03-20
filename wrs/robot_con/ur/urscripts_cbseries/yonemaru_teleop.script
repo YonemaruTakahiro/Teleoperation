@@ -1,0 +1,32 @@
+def driverProg():
+	SERVO_IDLE = 0
+	SERVO_RUNNING = 1
+	cmd_servo_state = SERVO_IDLE
+	cmd_servo_q = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+	thread read_jnts_values():
+	    socket_open("parameter_ip", parameter_port)
+	    textmsg("open connection")
+	    while True:
+	        params_mult = socket_read_binary_integer(6)
+	        if params_mult[0] > 0:
+                q = [params_mult[1]/parameter_jointscaler,
+                     params_mult[2]/parameter_jointscaler,
+                     params_mult[3]/parameter_jointscaler,
+                     params_mult[4]/parameter_jointscaler,
+                     params_mult[5]/parameter_jointscaler,
+                     params_mult[6]/parameter_jointscaler]
+		    end
+		    sync()
+		end
+	end
+
+	thread_servo = run read_jnts_values()
+	while True:
+	    servoj(q)
+	    sync()
+	end
+	sync()
+	socket_close()
+	kill thread_servo
+end
