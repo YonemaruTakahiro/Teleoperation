@@ -1,0 +1,29 @@
+total_num_joints: 12
+
+
+# Fingers and their offsets
+fingers:
+  thumb:
+    name: 'Thumb'
+    offset: 0
+    joints_per_finger: 3
+  index:
+    name: 'Index'
+    offset: 3
+    joints_per_finger: 3
+
+  middle:
+    name: 'Middle'
+    offset: 6
+    joints_per_finger: 2
+
+  ring:
+    name: 'Ring'
+    offset: 8
+    joints_per_finger: 2
+
+
+  pinky:
+    name: 'Pinky'
+    offset: 10
+    joints_per_finger: 2

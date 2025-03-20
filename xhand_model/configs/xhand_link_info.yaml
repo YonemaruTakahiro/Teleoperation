@@ -1,0 +1,79 @@
+#  Finger info
+links_info:
+
+  # Base link
+  base:
+    name: 'Base'
+    link: 'right_hand_link'
+
+  # Thumb link
+  thumb:
+    name: 'Thumb'
+    link: 'right_hand_thumb_bend_joint'
+    offset: 0
+    joint_min:
+      - 0.0
+      - -1.05
+      - 0.0
+
+    joint_max:
+      - 1.57
+      - 1.57
+      - 1.57
+
+  # Index link
+  index:
+    name: 'Index'
+    link: 'right_hand_index_bend_joint'
+    offset: 3
+    joint_min:
+      - -0.087
+      - 0.0
+      - 0.0
+
+    joint_max:
+      - 0.297
+      - 1.92
+      - 1.92
+
+
+  # Middle link
+  middle:
+    name: 'Middle'
+    link: 'right_hand_mid_joint1'
+    offset: 6
+    joint_min:
+      - 0.0
+      - 0.0
+
+    joint_max:
+      - 1.92
+      - 1.92
+
+
+  # Ring link
+  ring:
+    name: 'Ring'
+    link: 'right_hand_ring_joint1'
+    offset: 8
+    joint_min:
+      - 0.0
+      - 0.0
+
+    joint_max:
+      - 1.92
+      - 1.92
+
+
+  # Pinky link
+  pinky:
+    name: 'pinky'
+    link: 'right_hand_pinky_joint1'
+    offset: 10
+    joint_min:
+      - 0.0
+      - 0.0
+
+    joint_max:
+      - 1.92
+      - 1.92
