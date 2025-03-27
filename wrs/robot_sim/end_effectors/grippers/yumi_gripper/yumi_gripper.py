@@ -26,7 +26,9 @@ class YumiGripper(gpi.GripperInterface):
                                  rotmat=self.coupling.gl_flange_pose_list[0][1], n_dof=2, name=name)
         # anchor
         self.jlc.anchor.lnk_list[0].cmodel = mcm.CollisionModel(
-            os.path.join(current_file_dir, "meshes", "base.stl"), cdmesh_type=self.cdmesh_type)
+            initor=os.path.join(current_file_dir, "meshes", "base.stl"),
+            name="yumi_gripper_base",
+            cdmesh_type=self.cdmesh_type)
         self.jlc.anchor.lnk_list[0].cmodel.rgba = np.array([.75, .75, .75, 1])
         # the 1st joint (left finger, +y direction)
         self.jlc.jnts[0].change_type(rkjlc.const.JntType.PRISMATIC, np.array([0, self.jaw_range[1] / 2]))
@@ -34,7 +36,8 @@ class YumiGripper(gpi.GripperInterface):
         self.jlc.jnts[0].loc_motion_ax = rm.const.y_ax
         self.jlc.jnts[0].motion_range = np.array([0.0, 0.025])
         self.jlc.jnts[0].lnk.cmodel = mcm.CollisionModel(
-            os.path.join(current_file_dir, "meshes", "finger_sheet_metal.stl"),
+            initor=os.path.join(current_file_dir, "meshes", "finger_sheet_metal.stl"),
+            name="yumi_gripper_metal_finger1",
             cdmesh_type=self.cdmesh_type)
         self.jlc.jnts[0].lnk.cmodel.rgba = np.array([.5, .5, .5, 1])
         # the 2nd joint (right finger, -y direction)
@@ -43,7 +46,8 @@ class YumiGripper(gpi.GripperInterface):
         self.jlc.jnts[1].loc_rotmat = rm.rotmat_from_euler(0, 0, np.pi)
         self.jlc.jnts[1].loc_motion_ax = rm.const.y_ax
         self.jlc.jnts[1].lnk.cmodel = mcm.CollisionModel(
-            os.path.join(current_file_dir, "meshes", "finger_sheet_metal.stl"),
+            initor=os.path.join(current_file_dir, "meshes", "finger_sheet_metal.stl"),
+            name="yumi_gripper_metal_finger2",
             cdmesh_type=self.cdmesh_type)
         self.jlc.jnts[1].lnk.cmodel.rgba = np.array([.5, .5, .5, 1])
         # reinitialize
@@ -51,9 +55,9 @@ class YumiGripper(gpi.GripperInterface):
         # acting center
         self.loc_acting_center_pos = np.array([0, 0, 0.13])
         # collisions
-        self.cdmesh_elements = (self.jlc.anchor.lnk_list[0],
-                                self.jlc.jnts[0].lnk,
-                                self.jlc.jnts[1].lnk)
+        self.cdelements = (self.jlc.anchor.lnk_list[0],
+                           self.jlc.jnts[0].lnk,
+                           self.jlc.jnts[1].lnk)
 
     def fix_to(self, pos, rotmat):
         self._pos = pos
@@ -74,8 +78,8 @@ class YumiGripper(gpi.GripperInterface):
         else:
             raise ValueError("The angle parameter is out of range!")
 
-    def gen_stickmodel(self, toggle_tcp_frame=False, toggle_jnt_frames=False, name='yumi_gripper_stickmodel'):
-        m_col = mmc.ModelCollection(name=name)
+    def gen_stickmodel(self, toggle_tcp_frame=False, toggle_jnt_frames=False):
+        m_col = mmc.ModelCollection(name=self.name+'_stickmodel')
         self.coupling.gen_stickmodel(toggle_root_frame=False, toggle_flange_frame=False).attach_to(m_col)
         self.jlc.gen_stickmodel(toggle_jnt_frames=toggle_jnt_frames, toggle_flange_frame=False).attach_to(m_col)
         if toggle_tcp_frame:
@@ -88,9 +92,8 @@ class YumiGripper(gpi.GripperInterface):
                       toggle_tcp_frame=False,
                       toggle_jnt_frames=False,
                       toggle_cdprim=False,
-                      toggle_cdmesh=False,
-                      name='yumi_gripper_meshmodel'):
-        m_col = mmc.ModelCollection(name=name)
+                      toggle_cdmesh=False):
+        m_col = mmc.ModelCollection(name=self.name+'_meshmodel')
         self.coupling.gen_meshmodel(rgb=rgb,
                                     alpha=alpha,
                                     toggle_root_frame=False,
@@ -112,22 +115,22 @@ class YumiGripper(gpi.GripperInterface):
 
 
 if __name__ == '__main__':
-    import wrs.visualization.panda.world as wd
+    from wrs import wd, mgm
 
     base = wd.World(cam_pos=[.5, .5, .5], lookat_pos=[0, 0, 0])
-    gm.gen_frame().attach_to(base)
-    grpr = YumiGripper()
+    mgm.gen_frame().attach_to(base)
+    gripper = YumiGripper()
     # 1
-    grpr.fix_to(pos=np.array([0, .3, .2]), rotmat=rm.rotmat_from_euler(math.pi / 3, math.pi / 3, math.pi / 3))
-    grpr.change_jaw_width(.02)
-    print(grpr.get_jaw_width())
-    grpr.gen_stickmodel().attach_to(base)
-    grpr.gen_meshmodel(alpha=.3).attach_to(base)
+    gripper.fix_to(pos=np.array([0, .3, .2]), rotmat=rm.rotmat_from_euler(math.pi / 3, math.pi / 3, math.pi / 3))
+    gripper.change_jaw_width(.02)
+    print(gripper.get_jaw_width())
+    gripper.gen_stickmodel().attach_to(base)
+    gripper.gen_meshmodel(alpha=.3).attach_to(base)
     # 2
-    grpr.fix_to(pos=np.zeros(3), rotmat=np.eye(3))
-    grpr.gen_meshmodel().attach_to(base)
+    gripper.fix_to(pos=np.zeros(3), rotmat=np.eye(3))
+    gripper.gen_meshmodel().attach_to(base)
     # 3
-    grpr.fix_to(pos=np.array([.3, .3, .2]), rotmat=rm.rotmat_from_axangle([0, 1, 0], .01))
-    model = grpr.gen_meshmodel(rgb=np.array([0.5, .5, 0]), alpha=.5, toggle_cdmesh=True, toggle_cdprim=True)
+    gripper.fix_to(pos=np.array([.3, .3, .2]), rotmat=rm.rotmat_from_axangle([0, 1, 0], .01))
+    model = gripper.gen_meshmodel(rgb=np.array([0.5, .5, 0]), alpha=.5, toggle_cdmesh=True, toggle_cdprim=True)
     model.attach_to(base)
     base.run()

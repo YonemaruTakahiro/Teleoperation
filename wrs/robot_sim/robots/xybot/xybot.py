@@ -34,7 +34,7 @@ class XYBot(ri.RobotInterface):
         self.jnt_values_bk = []
 
     def setup_cc(self):
-        body = self.cc.add_cce(self.jlc.jnts[1].lnk)
+        self.cc.add_cce(self.jlc.jnts[1].lnk)
 
     def backup_state(self):
         self.jnt_values_bk.append(self.jlc.get_jnt_values())
@@ -115,7 +115,7 @@ class XYWBot(ri.RobotInterface):
     def are_jnts_in_ranges(self, jnt_values):
         return self.jlc.are_jnts_in_ranges(jnt_values)
 
-    def is_collided(self, obstacle_list=[], other_robot_list=[], toggle_contacts=False):
+    def is_collided(self, obstacle_list=[], other_robot_list=[], toggle_contacts=False, toggle_dbg=False):
         if self.cc is None:
             for (pos, diameter) in obstacle_list:
                 dist = np.linalg.norm(np.asarray(pos) - self.get_jnt_values())

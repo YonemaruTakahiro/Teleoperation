@@ -130,6 +130,7 @@ class Link(object):
         self._cmodel = cmodel
         self._cmodel.pose = (self._gl_pos, self._gl_rotmat)
 
+
     def install_onto(self, pos=np.zeros(3), rotmat=np.eye(3)):
         """
         update the global parameters with given reference pos, reference rotmat
@@ -335,6 +336,7 @@ class Anchor(object):
         return gl_flange_list
 
     def gen_stickmodel(self,
+                       name="anchor_lnk_stick",
                        toggle_root_frame=True,
                        toggle_flange_frame=True,
                        radius=const.JNT_RADIUS,
@@ -346,7 +348,8 @@ class Anchor(object):
                                toggle_lnk_mesh=False,
                                radius=radius,
                                frame_stick_radius=frame_stick_radius,
-                               frame_stick_length=frame_stick_length)
+                               frame_stick_length=frame_stick_length,
+                               name=name)
 
     def gen_meshmodel(self, name="anchor_lnk_mesh", rgb=None,
                       alpha=None, toggle_cdmesh=False, toggle_cdprim=False,

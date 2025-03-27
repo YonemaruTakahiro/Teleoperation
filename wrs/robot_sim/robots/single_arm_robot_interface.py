@@ -57,7 +57,10 @@ class SglArmRobotInterface(ri.RobotInterface):
 
     @property
     def oiee_list(self):
-        return self.end_effector.oiee_list
+        if self._end_effector is not None:
+            return self.end_effector.oiee_list
+        else:
+            return []
 
     def update_end_effector(self, ee_values=None):
         if self.end_effector is not None:
@@ -67,7 +70,8 @@ class SglArmRobotInterface(ri.RobotInterface):
 
     def backup_state(self):
         self._manipulator.backup_state()
-        self._end_effector.backup_state()
+        if self._end_effector is not None:
+            self._end_effector.backup_state()
 
     def restore_state(self):
         self._manipulator.restore_state()
@@ -75,46 +79,59 @@ class SglArmRobotInterface(ri.RobotInterface):
             if self.cc is not None:
                 self.cc.remove_cce(oiee)
         self.update_end_effector()
-        self._end_effector.restore_state()
+        if self._end_effector is not None:
+            self._end_effector.restore_state()
         if self.cc is not None:
             uuid_list = []
             for oiee in self.oiee_list:
                 uuid_list.append(self.cc.add_cce(oiee))
-            self.cc.set_cdpair_by_ids(uuid_list, self.cc.dynamic_into_list)
-            self.cc.dynamic_ext_list.extend(uuid_list)
+            if len(uuid_list) > 0:
+                self.cc.enable_extcd_by_id_list(id_list=uuid_list, type="from")
+                self.cc.enable_innercd_by_id_list(id_list=uuid_list, type="from")
+                self.cc.dynamic_ext_list.extend(uuid_list)
 
     def get_ee_values(self):
-        return self.end_effector.get_ee_values()
+        if self._end_effector is not None:
+            return self.end_effector.get_ee_values()
+        else:
+            print("No end effector is attached to the robot!")
+            return None
 
     def change_ee_values(self, ee_values):
-        self.end_effector.change_ee_values(ee_values=ee_values)
+        if self._end_effector is not None:
+            self.end_effector.change_ee_values(ee_values=ee_values)
+        else:
+            print("No end effector is attached to the robot!")
+            return
 
     def hold(self, obj_cmodel, **kwargs):
+        if self._end_effector is None:
+            print("No end effector is attached to the robot!")
+            return
         oiee = self.end_effector.hold(obj_cmodel, **kwargs)
         if self.cc is not None:
             uuid = self.cc.add_cce(oiee)
-            self.cc.set_cdpair_by_ids([uuid], self.cc.dynamic_into_list)
+            self.cc.enable_extcd_by_id_list(id_list=[uuid], type="from")
+            self.cc.enable_innercd_by_id_list(id_list=[uuid], type="from")
             self.cc.dynamic_ext_list.append(uuid)
 
-
     def release(self, obj_cmodel, **kwargs):
+        if self._end_effector is None:
+            print("No end effector is attached to the robot!")
+            return
         oiee = self.end_effector.release(obj_cmodel, **kwargs)
         if oiee is not None and self.cc is not None:
             self.cc.remove_cce(oiee)
 
     def toggle_off_eecd(self):
         if self.cc is not None:
-            for uuid in self.cc.dynamic_ext_list:
-                self.cc.cce_dict[uuid].disable_extcd(type="from")
-            for oiee in self.oiee_list:
-                self.cc.cce_dict[oiee.uuid].disable_extcd(type="from")
+            self.cc.disable_extcd_by_id_list(id_list=self.cc.dynamic_ext_list, type="from")
+            self.cc.disable_innercd_by_id_list(id_list=self.cc.dynamic_into_list, type="into")
 
     def toggle_on_eecd(self):
         if self.cc is not None:
-            for uuid in self.cc.dynamic_ext_list:
-                self.cc.cce_dict[uuid].enable_extcd(type="from")
-            for oiee in self.oiee_list:
-                self.cc.cce_dict[oiee.uuid].enable_extcd(type="from")
+            self.cc.enable_extcd_by_id_list(id_list=self.cc.dynamic_ext_list, type="from")
+            self.cc.enable_innercd_by_id_list(id_list=self.cc.dynamic_into_list, type="into")
 
     def goto_given_conf(self, jnt_values, ee_values=None):
         result = self._manipulator.goto_given_conf(jnt_values=jnt_values)
@@ -174,9 +191,8 @@ class SglArmRobotInterface(ri.RobotInterface):
     def gen_stickmodel(self,
                        toggle_tcp_frame=False,
                        toggle_jnt_frames=False,
-                       toggle_flange_frame=False,
-                       name='single_arm_robot_interface_stickmodel'):
-        m_col = mmc.ModelCollection(name=name)
+                       toggle_flange_frame=False):
+        m_col = mmc.ModelCollection(name=self.name+'_stickmodel')
         if self._manipulator is not None:
             self._manipulator.gen_stickmodel(toggle_tcp_frame=toggle_tcp_frame,
                                              toggle_jnt_frames=toggle_jnt_frames,
@@ -193,9 +209,8 @@ class SglArmRobotInterface(ri.RobotInterface):
                       toggle_jnt_frames=False,
                       toggle_flange_frame=False,
                       toggle_cdprim=False,
-                      toggle_cdmesh=False,
-                      name='single_arm_robot_interface_meshmodel'):
-        m_col = mmc.ModelCollection(name=name)
+                      toggle_cdmesh=False):
+        m_col = mmc.ModelCollection(name=self.name+'_meshmodel')
         if self._manipulator is not None:
             self._manipulator.gen_meshmodel(rgb=rgb,
                                             alpha=alpha,

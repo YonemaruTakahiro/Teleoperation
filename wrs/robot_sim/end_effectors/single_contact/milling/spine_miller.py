@@ -9,7 +9,7 @@ import wrs.robot_sim.end_effectors.single_contact.single_contact_interface as si
 class SpineMiller(si.SCTInterface):
 
     def __init__(self, pos=rm.np.zeros(3), rotmat=rm.np.eye(3),
-                 cdmesh_type=mcm.const.CDMeshType.DEFAULT, name='spine_miller', enable_cc=True):
+                 cdmesh_type=mcm.const.CDMeshType.DEFAULT, name='spine_miller'):
         super().__init__(pos=pos, rotmat=rotmat, cdmesh_type=cdmesh_type, name=name)
         this_dir, this_filename = os.path.split(__file__)
         cpl_end_pos = self.coupling.gl_flange_pose_list[0][0]
@@ -35,9 +35,9 @@ class SpineMiller(si.SCTInterface):
         # action center
         self.loc_acting_center_pos = rm.np.array([0, 0, .22])
         # collision detection
-        self.all_cdelements = [self.anchor.lnk_list[0],
-                               self.anchor.lnk_list[1],
-                               self.anchor.lnk_list[2]]
+        self.cdelements = (self.anchor.lnk_list[0],
+                           self.anchor.lnk_list[1],
+                           self.anchor.lnk_list[2])
 
     def fix_to(self, pos, rotmat):
         self._pos = pos
@@ -48,8 +48,8 @@ class SpineMiller(si.SCTInterface):
         self.anchor.fix_to(cpl_end_pos, cpl_end_rotmat)
 
     def gen_stickmodel(self, toggle_tcp_frame=False, toggle_jnt_frames=False,
-                       toggle_flange_frame=False, name='_stickmodel'):
-        m_col = mmc.ModelCollection(name=self.name + name)
+                       toggle_flange_frame=False):
+        m_col = mmc.ModelCollection(name=self.name + "_stickmodel")
         self.coupling.gen_stickmodel(toggle_flange_frame=toggle_flange_frame,
                                      toggle_root_frame=toggle_jnt_frames).attach_to(m_col)
         self.anchor.gen_stickmodel(toggle_flange_frame=toggle_tcp_frame).attach_to(m_col)
@@ -64,9 +64,8 @@ class SpineMiller(si.SCTInterface):
                       toggle_jnt_frames=False,
                       toggle_flange_frame=False,
                       toggle_cdprim=False,
-                      toggle_cdmesh=False,
-                      name='_meshmodel'):
-        m_col = mmc.ModelCollection(name=self.name + name)
+                      toggle_cdmesh=False):
+        m_col = mmc.ModelCollection(name=self.name + "_meshmodel")
         self.coupling.gen_meshmodel(rgb=rgb,
                                     alpha=alpha,
                                     toggle_flange_frame=toggle_flange_frame,

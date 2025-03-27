@@ -12,7 +12,7 @@ try:
 except ImportError:
     from collections import Sequence
 
-import wrs.drivers.urx.ur_secondary_monitor as urrtmon, wrs.drivers.urx.ur_secondary_monitor as ursecmon
+from wrs import drivers as urrtmon, drivers as ursecmon
 
 __author__ = "Olivier Roulet-Dubonnet"
 __copyright__ = "Copyright 2011-2015, Sintef Raufoss Manufacturing"

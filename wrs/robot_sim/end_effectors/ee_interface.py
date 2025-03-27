@@ -23,7 +23,7 @@ class EEInterface(object):
         self.loc_acting_center_pos = np.zeros(3)
         self.loc_acting_center_rotmat = np.eye(3)
         # cd mesh collection for precise collision checking
-        self.cdmesh_elements = []
+        self.cdelements = []
         # object grasped/held/attached to end-effector; oiee = object in end-effector
         self.oiee_list = []
         self.oiee_list_bk = []
@@ -52,6 +52,10 @@ class EEInterface(object):
         gl_acting_center_pos = self._rotmat @ self.loc_acting_center_pos + self._pos
         gl_acting_center_rotmat = self._rotmat @ self.loc_acting_center_rotmat
         return (gl_acting_center_pos, gl_acting_center_rotmat)
+
+    @property
+    def cdmesh_list(self):
+        return [cdlnk.cmodel for cdlnk in self.cdelements]
 
     def update_oiee(self):
         """
@@ -136,12 +140,12 @@ class EEInterface(object):
             return False
         if isinstance(cmodel_list, mcm.CollisionModel):
             cmodel_list = [cmodel_list]
-        for i, cdme in enumerate(self.cdmesh_elements):
-            if cdme.cmodel is not None:
-                is_collided, collision_points = cdme.cmodel.is_mcdwith(cmodel_list, True)
+        for i, cdlnk in enumerate(self.cdelements):
+            if cdlnk.cmodel is not None:
+                is_collided, collision_points = cdlnk.cmodel.is_mcdwith(cmodel_list, True)
                 if is_collided:
                     if toggle_dbg:
-                        mgm.GeometricModel(cdme.cmodel).attach_to(base)
+                        mgm.GeometricModel(cdlnk.cmodel).attach_to(base)
                         print(collision_points)
                         for point in collision_points:
                             mgm.gen_sphere(point, radius=.01).attach_to(base)
@@ -184,7 +188,7 @@ class EEInterface(object):
         self.fix_to(ee_root_pos, ee_root_rotmat)
         return [acting_center_pos, acting_center_rotmat, ee_root_pos, ee_root_rotmat]
 
-    def gen_stickmodel(self, toggle_tcp_frame=False, toggle_jnt_frames=False, name='ee_stickmodel'):
+    def gen_stickmodel(self, toggle_tcp_frame=False, toggle_jnt_frames=False):
         raise NotImplementedError
 
     def gen_meshmodel(self,
@@ -193,8 +197,7 @@ class EEInterface(object):
                       toggle_tcp_frame=False,
                       toggle_jnt_frames=False,
                       toggle_cdprim=False,
-                      toggle_cdmesh=False,
-                      name='ee_meshmodel'):
+                      toggle_cdmesh=False):
         raise NotImplementedError
 
     def _gen_oiee_meshmodel(self,
@@ -218,7 +221,6 @@ class EEInterface(object):
     def _toggle_tcp_frame(self, m_col):
         gl_acting_center_pos = self._rotmat @ self.loc_acting_center_pos + self._pos
         gl_acting_center_rotmat = self._rotmat @ self.loc_acting_center_rotmat
-        # print(gl_acting_center_rotmat)
         rkmg.gen_indicated_frame(spos=self._pos,
                                  gl_pos=gl_acting_center_pos,
                                  gl_rotmat=gl_acting_center_rotmat).attach_to(m_col)

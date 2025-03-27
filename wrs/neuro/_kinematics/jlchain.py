@@ -222,7 +222,6 @@ class JLChain(object):
         return (tmp_loc_pos, tmp_loc_rotmat)
 
     def are_jnts_in_ranges(self, jnt_values):
-
         """
         check if the given jnt_values are in range
         :param jnt_values: tensor

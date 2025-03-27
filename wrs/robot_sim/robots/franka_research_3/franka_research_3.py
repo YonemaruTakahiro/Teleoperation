@@ -45,11 +45,11 @@ class FrankaResearch3(rsi.SglArmRobotInterface):
 
     def setup_cc(self):
         # end effector
-        elb = self.cc.add_cce(self.end_effector.jlc.anchor.lnk_list[0])
-        el0 = self.cc.add_cce(self.end_effector.jlc.jnts[0].lnk)
-        el1 = self.cc.add_cce(self.end_effector.jlc.jnts[1].lnk)
+        ee_cces = []
+        for id, cdlnk in enumerate(self.end_effector.cdelements):
+            ee_cces.append(self.cc.add_cce(cdlnk))
         # manipulator
-        mlb = self.cc.add_cce(self.manipulator.jlc.anchor.lnk_list[0], toggle_extcd=False)
+        mlb = self.cc.add_cce(self.manipulator.jlc.anchor.lnk_list[0])
         ml0 = self.cc.add_cce(self.manipulator.jlc.jnts[0].lnk)
         ml1 = self.cc.add_cce(self.manipulator.jlc.jnts[1].lnk)
         ml2 = self.cc.add_cce(self.manipulator.jlc.jnts[2].lnk)
@@ -57,9 +57,13 @@ class FrankaResearch3(rsi.SglArmRobotInterface):
         ml4 = self.cc.add_cce(self.manipulator.jlc.jnts[4].lnk)
         ml5 = self.cc.add_cce(self.manipulator.jlc.jnts[5].lnk)
         ml6 = self.cc.add_cce(self.manipulator.jlc.jnts[6].lnk)
-        from_list = [elb, el0, el1, ml5, ml6]
-        into_list = [mlb, ml0, ml1, ml2]
+        from_list = ee_cces + [ml5, ml6]
+        into_list = [mlb, ml0, ml1, ml2, ml3]
         self.cc.set_cdpair_by_ids(from_list, into_list)
+        # ext and inner
+        self.cc.enable_extcd_by_id_list(id_list=[ml0, ml1, ml2, ml3, ml4, ml5]+ee_cces, type="from")
+        self.cc.enable_innercd_by_id_list(id_list=[mlb, ml0, ml1, ml2, ml3], type="into")
+        self.cc.dynamic_ext_list = ee_cces[1:]
 
     def fix_to(self, pos, rotmat):
         self.pos = pos

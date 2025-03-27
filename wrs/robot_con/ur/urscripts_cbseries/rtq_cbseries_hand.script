@@ -950,6 +950,6 @@ def CBGripper():
     rq_activate_all_grippers(False)
 
     clear_socket_buffer("1")
-    textmsg("Gripper 1 : ", "aaaaaaaa")
+
     program_replace
 end#

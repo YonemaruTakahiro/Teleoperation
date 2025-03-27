@@ -3,16 +3,14 @@ def driverProg():
 	SERVO_RUNNING = 1
 	cmd_servo_state = SERVO_IDLE
 	cmd_servo_q = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-	keepalive=0
 
-	def set_servo_setpoint(q,mode):
+	def set_servo_setpoint(q):
 		enter_critical
 		while cmd_servo_state == SERVO_RUNNING:
 		    sync()
         end
 		cmd_servo_q = q
 		cmd_servo_state = SERVO_RUNNING
-		keepalive=mode
 		exit_critical
 	end
 
@@ -31,16 +29,9 @@ def driverProg():
 			if do_brake:
 				stopj(1.0)
 				sync()
-			elif (state == SERVO_RUNNING) and (keepalive==1):
-				textmsg("q=",q)
-				socket_send_int(1)
-				servoj(q,t=0.1,lookahead_time=0.1)
-				sync()
-			elif (state == SERVO_RUNNING) and (keepalive==0):
-			    textmsg("q=",q)
-			    socket_send_int(1)
-				servoj(q,t=0.1)
-				sync()
+			elif state == SERVO_RUNNING:
+				# textmsg(q)
+				servoj(q)
 			else:
 				sync()
 			end
@@ -50,21 +41,21 @@ def driverProg():
 	socket_open("parameter_ip", parameter_port)
 	textmsg("open connection")
 	thread_servo = run servoThread()
-	while True:
+	keepalive = 1
+	while keepalive > 0:
+		# textmsg("preparing to read")
+		# textmsg(keepalive)
 		params_mult = socket_read_binary_integer(6+1)
-		textmsg("params_mult=",params_mult)
-		if params_mult[0] > 0 and params_mult[7] > -1:
+		if params_mult[0] > 0:
 			q = [params_mult[1]/parameter_jointscaler,
 				 params_mult[2]/parameter_jointscaler,
 				 params_mult[3]/parameter_jointscaler,
 				 params_mult[4]/parameter_jointscaler,
 				 params_mult[5]/parameter_jointscaler,
 				 params_mult[6]/parameter_jointscaler]
-			set_servo_setpoint(q,params_mult[7])
+			keepalive = params_mult[7]
+			set_servo_setpoint(q)
 	        sync()
-	    end
-	    if params_mult[7] ==-2:
-	        break
 		end
 	end
 	sync()

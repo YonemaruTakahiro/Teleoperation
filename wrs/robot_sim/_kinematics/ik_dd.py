@@ -38,9 +38,9 @@ class DDIKSolver(object):
         if path is None:
             path = os.path.join(os.path.dirname(current_file_dir), "_data_files")
         self._fname_tree = os.path.join(path, f"{identifier_str}_ikdd_tree.pkl")
-        self._fname_jnt = os.path.join(path, f"{identifier_str}_jnt_data.pkl")
+        self._fname_jnt = os.path.join(path, f"{identifier_str}_ikdd_jnt_data.pkl")
         self._k_bbs = 100  # number of nearest neighbours examined by the backbone solver
-        self._k_max = 200  # maximum nearest neighbours explored by the evolver
+        self._k_max = 100  # maximum nearest neighbours explored by the evolver
         self._max_n_iter = 7  # max_n_iter of the backbone solver
         if backbone_solver == 'n':
             self._backbone_solver = ikn.NumIKSolver(self.jlc)
@@ -250,6 +250,8 @@ class DDIKSolver(object):
             rel_rotvec = self._rotmat_to_vec(rel_rotmat)
             query_point = np.concatenate((rel_pos, rel_rotvec))
             dist_value_array, nn_indx_array = self.query_tree.query(query_point, k=self._k_max, workers=-1)
+            if type(nn_indx_array) is int:
+                nn_indx_array = [nn_indx_array]
             for id, nn_indx in enumerate(nn_indx_array):
                 seed_jnt_values = self.jnt_data[nn_indx]
                 if toggle_dbg:
@@ -265,11 +267,10 @@ class DDIKSolver(object):
                     # mgm.gen_frame(pos=tgt_pos, rotmat=tgt_rotmat).attach_to(base)
                     # rkmg.gen_jlc_stick_by_jnt_values(self.jlc,
                     #                                  jnt_values=seed_jnt_values,
-                    #                                  stick_rgba=rm.bc.red).attach_to(base)
+                    #                                  stick_rgba=rm.const.red).attach_to(base)
                     # print(result)
                     # if id == self._k_max-1:
                     #     base.run()
-                    # continue
                     if toggle_evolve:
                         continue
                     else:
@@ -285,6 +286,21 @@ class DDIKSolver(object):
                     return result
             # failed to find a solution, use optimization methods to solve and update the database?
         return None
+
+    def test_success_rate(self, n_times=1000):
+        """
+        :param n_times:
+        :return:
+        """
+        n_success = 0
+        for i in range(n_times):
+            jnt_values = self.jlc.rand_conf()
+            tgt_pos, tgt_rotmat = self.jlc.fk(jnt_values=jnt_values)
+            result = self.ik(tgt_pos=tgt_pos, tgt_rotmat=tgt_rotmat)
+            if result is not None:
+                n_success += 1
+        print(f"Success rate: {n_success / n_times}")
+
 
 
 if __name__ == '__main__':
@@ -329,10 +345,10 @@ if __name__ == '__main__':
     jlc.jnts[6].motion_range = np.array([-3.99680398707 + _jnt_safemargin, 3.99680398707 - _jnt_safemargin])
     jlc._loc_flange_pos = np.array([0, 0, .007])
     jlc.finalize(ik_solver='d', identifier_str="test")
-    jlc._ik_solver.test_success_rate()
+    jlc.test_ik_success_rate()
 
     goal_jnt_values = jlc.rand_conf()
-    rkmg.gen_jlc_stick_by_jnt_values(jlc, jnt_values=goal_jnt_values, stick_rgba=rm.bc.blue).attach_to(base)
+    rkmg.gen_jlc_stick_by_jnt_values(jlc, jnt_values=goal_jnt_values, stick_rgba=rm.const.blue).attach_to(base)
 
     tgt_pos, tgt_rotmat = jlc.fk(jnt_values=goal_jnt_values)
     tic = time.time()

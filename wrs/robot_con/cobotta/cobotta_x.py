@@ -1,7 +1,7 @@
 import time
 import numpy.typing as npt
 from typing import List
-import wrs.motion.trajectory.topp_ra as trajp
+import wrs.motion.trajectory.totg as trajp
 
 
 class CobottaX(object):
@@ -47,7 +47,7 @@ class CobottaX(object):
         author: weiwei
         date: 20210507
         """
-        self.hhnd = self.bcc.robot_execute(self.hrbt, "TakeArm", [0, 0])  # 20220319 robot_move changed speed limits?
+        self.hhnd = self.bcc.robot_execute(self.hrbt, "     TakeArm", [0, 0])  # 20220319 robot_move changed speed limits?
         new_path = []
         for i, pose in enumerate(path):
             if i < len(path) - 1 and not np.allclose(pose, path[i + 1]):

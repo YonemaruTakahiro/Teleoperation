@@ -1,7 +1,6 @@
-
 from hand_detector_wilor import HandDetector_wilor
-from data_class import animation,handdata,Data
-from keystroke_counter import (
+from utils.data_class import animation,handdata,Data
+from utils.keystroke_counter import (
     KeystrokeCounter, Key, KeyCode
 )
 
@@ -19,7 +18,7 @@ from wrs import wd, rm, ur3d, rrtc, mgm, mcm
 import wrs.robot_con.ur.ur3_rtq85_x as ur3
 
 from ultralytics import YOLO
-from precise_sleep import precise_wait
+from utils.precise_sleep import precise_wait
 from wilor.models import WiLoR, load_wilor
 from wilor.utils import recursive_to
 from wilor.datasets.vitdet_dataset import ViTDetDataset, DEFAULT_MEAN, DEFAULT_STD

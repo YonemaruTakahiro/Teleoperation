@@ -19,7 +19,8 @@ class UR3(mi.ManipulatorInterface):
         self.jlc.jnts[0].loc_pos = np.array([.0, .0, .1519])
         self.jlc.jnts[0].loc_motion_ax = np.array([0, 0, 1])
         self.jlc.jnts[0].motion_range = np.array([-np.pi * 2, np.pi * 2])
-        self.jlc.jnts[0].lnk.cmodel = mcm.CollisionModel(os.path.join(current_file_dir, "meshes", "shoulder.stl"))
+        self.jlc.jnts[0].lnk.cmodel = mcm.CollisionModel(
+            initor=os.path.join(current_file_dir, "meshes", "shoulder.stl"), name="ur3_shoulder")
         self.jlc.jnts[0].lnk.loc_rotmat = rm.rotmat_from_euler(.0, .0, np.pi)
         self.jlc.jnts[0].lnk.cmodel.rgba = np.array([.1, .3, .5, 1.0])
         # second joint and link
@@ -27,7 +28,8 @@ class UR3(mi.ManipulatorInterface):
         self.jlc.jnts[1].loc_rotmat = rm.rotmat_from_euler(np.pi / 2.0, .0, .0)
         self.jlc.jnts[1].loc_motion_ax = np.array([0, 0, 1])
         self.jlc.jnts[1].motion_range = np.array([-np.pi * 2, np.pi * 2])
-        self.jlc.jnts[1].lnk.cmodel = mcm.CollisionModel(os.path.join(current_file_dir, "meshes", "upperarm.stl"))
+        self.jlc.jnts[1].lnk.cmodel = mcm.CollisionModel(
+            initor=os.path.join(current_file_dir, "meshes", "upperarm.stl"), name="ur3_upperarm")
         self.jlc.jnts[1].lnk.loc_pos = np.array([.0, .0, .1198])
         self.jlc.jnts[1].lnk.loc_rotmat = rm.rotmat_from_euler(np.pi / 2, .0, -np.pi / 2)
         self.jlc.jnts[1].lnk.cmodel.rgba = np.array([.7, .7, .7, 1.0])
@@ -35,16 +37,17 @@ class UR3(mi.ManipulatorInterface):
         self.jlc.jnts[2].loc_pos = np.array([-.24365, .0, .0])
         self.jlc.jnts[2].loc_motion_ax = np.array([0, 0, 1])
         self.jlc.jnts[2].motion_range = np.array([-np.pi, np.pi])
-        self.jlc.jnts[2].lnk.cmodel = mcm.CollisionModel(os.path.join(current_file_dir, "meshes", "forearm.stl"))
+        self.jlc.jnts[2].lnk.cmodel = mcm.CollisionModel(
+            initor=os.path.join(current_file_dir, "meshes", "forearm.stl"), name="ur3_forearm")
         self.jlc.jnts[2].lnk.loc_pos = np.array([.0, .0, .0275])
         self.jlc.jnts[2].lnk.loc_rotmat = rm.rotmat_from_euler(np.pi / 2, .0, -np.pi / 2)
         self.jlc.jnts[2].lnk.cmodel.rgba = np.array([.35, .35, .35, 1.0])
         # fourth joint and link
         self.jlc.jnts[3].loc_pos = np.array([-.21325, .0, .11235])
-        self.jlc.jnts[3].loc_rotmat = rm.rotmat_from_euler(.0, .0, .0)
         self.jlc.jnts[3].loc_motion_ax = np.array([0, 0, 1])
         self.jlc.jnts[3].motion_range = np.array([-np.pi * 2, np.pi * 2])
-        self.jlc.jnts[3].lnk.cmodel = mcm.CollisionModel(os.path.join(current_file_dir, "meshes", "wrist1.stl"))
+        self.jlc.jnts[3].lnk.cmodel = mcm.CollisionModel(
+            initor=os.path.join(current_file_dir, "meshes", "wrist1.stl"), name="ur3_wrist1")
         self.jlc.jnts[3].lnk.loc_pos = np.array([.0, .0, -.085])
         self.jlc.jnts[3].lnk.loc_rotmat = rm.rotmat_from_euler(np.pi / 2, .0, .0)
         self.jlc.jnts[3].lnk.cmodel.rgba = np.array([.7, .7, .7, 1.0])
@@ -53,7 +56,8 @@ class UR3(mi.ManipulatorInterface):
         self.jlc.jnts[4].loc_rotmat = rm.rotmat_from_euler(np.pi / 2.0, .0, .0)
         self.jlc.jnts[4].loc_motion_ax = np.array([0, 0, 1])
         self.jlc.jnts[4].motion_range = np.array([-np.pi * 2, np.pi * 2])
-        self.jlc.jnts[4].lnk.cmodel = mcm.CollisionModel(os.path.join(current_file_dir, "meshes", "wrist2.stl"))
+        self.jlc.jnts[4].lnk.cmodel = mcm.CollisionModel(
+            initor=os.path.join(current_file_dir, "meshes", "wrist2.stl"), name="ur3_wrist2")
         self.jlc.jnts[4].lnk.loc_pos = np.array([.0, .0, -.085])
         self.jlc.jnts[4].lnk.cmodel.rgba = np.array([.1, .3, .5, 1.0])
         # sixth joint and link
@@ -61,7 +65,8 @@ class UR3(mi.ManipulatorInterface):
         self.jlc.jnts[5].loc_rotmat = rm.rotmat_from_euler(np.pi / 2.0, np.pi, np.pi)
         self.jlc.jnts[5].loc_motion_ax = np.array([0, 0, 1])
         self.jlc.jnts[5].motion_range = np.array([-np.pi * 2, np.pi * 2])
-        self.jlc.jnts[5].lnk.cmodel = mcm.CollisionModel(os.path.join(current_file_dir, "meshes", "wrist3.stl"))
+        self.jlc.jnts[5].lnk.cmodel = mcm.CollisionModel(
+            initor=os.path.join(current_file_dir, "meshes", "wrist3.stl"), name="ur3_wrist3")
         self.jlc.jnts[5].lnk.loc_pos = np.array([.0, .0, -.082])
         self.jlc.jnts[5].lnk.loc_rotmat = rm.rotmat_from_euler(np.pi / 2, .0, .0)
         self.jlc.jnts[5].lnk.cmodel.rgba = np.array([.5, .5, .5, 1.0])
@@ -201,20 +206,22 @@ if __name__ == '__main__':
     base = wd.World(cam_pos=[2, 0, 1], lookat_pos=[0, 0, 0])
     mcm.mgm.gen_frame().attach_to(base)
     arm = UR3(enable_cc=True)
-    arm.gen_meshmodel().attach_to(base)
+    arm.gen_meshmodel(alpha=.3).attach_to(base)
+    arm.gen_stickmodel(toggle_tcp_frame=True, toggle_jnt_frames=True).attach_to(base)
     # base.run()
 
     tgt_pos = np.array([.25, .1, .1])
     tgt_rotmat = rm.rotmat_from_euler(0, np.pi, 0)
     mcm.mgm.gen_dashed_frame(pos=tgt_pos, rotmat=tgt_rotmat).attach_to(base)
     tic = time.time()
-    jnt_values = arm.ik(tgt_pos=tgt_pos, tgt_rotmat=tgt_rotmat)
+    jnt_values_list = arm.ik(tgt_pos=tgt_pos, tgt_rotmat=tgt_rotmat, option="multiple")
     toc = time.time()
     print(toc - tic)
-    if jnt_values is not None:
-        arm.goto_given_conf(jnt_values=jnt_values)
-        arm_mesh = arm.gen_meshmodel(alpha=.3)
-        arm_mesh.attach_to(base)
+    if jnt_values_list is not None:
+        for jnt_values in jnt_values_list:
+            arm.goto_given_conf(jnt_values=jnt_values)
+            arm_mesh = arm.gen_meshmodel(alpha=.3)
+            arm_mesh.attach_to(base)
     tmp_arm_stick = arm.gen_stickmodel(toggle_flange_frame=True)
     tmp_arm_stick.attach_to(base)
     base.run()

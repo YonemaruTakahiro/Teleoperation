@@ -12,53 +12,58 @@ class Nova2(mi.ManipulatorInterface):
     author: chen hao <chen960216@gmail.com>, 20230214osaka; weiwei20240611
     """
 
-    def __init__(self, pos=np.zeros(3), rotmat=np.eye(3), ik_solver='d', name='nova2', enable_cc=True):
+    def __init__(self, pos=np.zeros(3), rotmat=np.eye(3), ik_solver='a', name='nova2', enable_cc=True):
         super().__init__(pos=pos, rotmat=rotmat, home_conf=np.zeros(6), name=name, enable_cc=enable_cc)
         current_file_dir = os.path.dirname(__file__)
         # anchor
         self.jlc.anchor.lnk_list[0].cmodel = mcm.CollisionModel(
-            os.path.join(current_file_dir, "meshes", "base_link0.stl"),
-            cdprim_type=mcm.const.CDPrimType.USER_DEFINED,
-            userdef_cdprim_fn=self._base_cdprim)
+            initor=os.path.join(current_file_dir, "meshes", "base_link0.stl"), name="nova2_base",
+            cdprim_type=mcm.const.CDPrimType.USER_DEFINED, userdef_cdprim_fn=self._base_cdprim)
         self.jlc.anchor.lnk_list[0].cmodel.rgba = np.array([.7, .7, .7, 1.0])
         # first joint and link
         self.jlc.jnts[0].loc_pos = np.array([.0, .0, .2234])
         self.jlc.jnts[0].loc_motion_ax = np.array([0, 0, -1])
         self.jlc.jnts[0].motion_range = np.array([-np.pi, np.pi])
-        self.jlc.jnts[0].lnk.cmodel = mcm.CollisionModel(os.path.join(current_file_dir, "meshes", "j1.stl"))
+        self.jlc.jnts[0].lnk.cmodel = mcm.CollisionModel(
+            initor=os.path.join(current_file_dir, "meshes", "j1.stl"), name="nova2_j1")
         self.jlc.jnts[0].lnk.cmodel.rgba = np.array([.7, .7, .7, 1.0])
         # second joint and link
         self.jlc.jnts[1].loc_pos = np.array([.0, .0, .0])
         self.jlc.jnts[1].loc_rotmat = rm.rotmat_from_euler(1.5708, 1.5708, 0)
         self.jlc.jnts[1].loc_motion_ax = np.array([0, 0, 1])
         self.jlc.jnts[1].motion_range = np.array([-np.pi, np.pi])
-        self.jlc.jnts[1].lnk.cmodel = mcm.CollisionModel(os.path.join(current_file_dir, "meshes", "j2.stl"))
+        self.jlc.jnts[1].lnk.cmodel = mcm.CollisionModel(
+            initor=os.path.join(current_file_dir, "meshes", "j2.stl"), name="nova2_j2")
         self.jlc.jnts[1].lnk.cmodel.rgba = np.array([.7, .7, .7, 1.0])
         # third joint and link
         self.jlc.jnts[2].loc_pos = np.array([-.28, .0, .0])
         self.jlc.jnts[2].loc_motion_ax = np.array([0, 0, 1])
         self.jlc.jnts[2].motion_range = np.array([-2.79, 2.79])
-        self.jlc.jnts[2].lnk.cmodel = mcm.CollisionModel(os.path.join(current_file_dir, "meshes", "j3.stl"))
+        self.jlc.jnts[2].lnk.cmodel = mcm.CollisionModel(
+            initor=os.path.join(current_file_dir, "meshes", "j3.stl"), name="nova2_j3")
         # fourth joint and link
         self.jlc.jnts[3].loc_pos = np.array([-0.22501, .0, 0.1175])
         self.jlc.jnts[3].loc_rotmat = rm.rotmat_from_euler(0, 0, -1.5708)
         self.jlc.jnts[3].loc_motion_ax = np.array([0, 0, 1])
         self.jlc.jnts[3].motion_range = np.array([-2 * np.pi, 2 * np.pi])
-        self.jlc.jnts[3].lnk.cmodel = mcm.CollisionModel(os.path.join(current_file_dir, "meshes", "j4.stl"))
+        self.jlc.jnts[3].lnk.cmodel = mcm.CollisionModel(
+            initor=os.path.join(current_file_dir, "meshes", "j4.stl"), name="nova2_j4")
         self.jlc.jnts[3].lnk.cmodel.rgba = np.array([.7, .7, .7, 1.0])
         # fifth joint and link
         self.jlc.jnts[4].loc_pos = np.array([.0, -0.12, .0])
         self.jlc.jnts[4].loc_rotmat = rm.rotmat_from_euler(1.5708, .0, .0)
         self.jlc.jnts[4].loc_motion_ax = np.array([0, 0, 1])
         self.jlc.jnts[4].motion_range = np.array([-2 * np.pi, 2 * np.pi])
-        self.jlc.jnts[4].lnk.cmodel = mcm.CollisionModel(os.path.join(current_file_dir, "meshes", "j5.stl"))
+        self.jlc.jnts[4].lnk.cmodel = mcm.CollisionModel(
+            initor=os.path.join(current_file_dir, "meshes", "j5.stl"), name="nova2_j5")
         self.jlc.jnts[4].lnk.cmodel.rgba = np.array([.7, .7, .7, 1.0])
         # sixth joint and link
         self.jlc.jnts[5].loc_pos = np.array([0., 0.088004, 0])
         self.jlc.jnts[5].loc_rotmat = rm.rotmat_from_euler(-1.5708, -np.pi, 0)
         self.jlc.jnts[5].loc_motion_ax = np.array([0, 0, 1])
         self.jlc.jnts[5].motion_range = np.array([-2 * np.pi, 2 * np.pi])
-        self.jlc.jnts[5].lnk.cmodel = mcm.CollisionModel(os.path.join(current_file_dir, "meshes", "j6.stl"))
+        self.jlc.jnts[5].lnk.cmodel = mcm.CollisionModel(
+            initor=os.path.join(current_file_dir, "meshes", "j6.stl"), name="nova2_j6")
         self.jlc.finalize(ik_solver=ik_solver, identifier_str=name)
         # tcp
         self.loc_tcp_pos = np.array([0, 0, 0])
@@ -69,15 +74,15 @@ class Nova2(mi.ManipulatorInterface):
 
     # self-defined collison model for the base link
     @staticmethod
-    def _base_cdprim(ex_radius):
-        pdcnd = CollisionNode("nova_base")
+    def _base_cdprim(name="auto", ex_radius=None):
+        pdcnd = CollisionNode(name + "_cnode")
         collision_primitive_c0 = CollisionBox(Point3(-0.008, 0, 0.0375),
                                               x=.07 + ex_radius, y=.065 + ex_radius, z=0.0375 + ex_radius)
         pdcnd.addSolid(collision_primitive_c0)
         collision_primitive_c1 = CollisionBox(Point3(0, 0, .124),
                                               x=.043 + ex_radius, y=.043 + ex_radius, z=.049 + ex_radius)
         pdcnd.addSolid(collision_primitive_c1)
-        cdprim = NodePath("user_defined")
+        cdprim = NodePath(name + "_cdprim")
         cdprim.attachNewNode(pdcnd)
         return cdprim
 
@@ -115,7 +120,7 @@ class Nova2(mi.ManipulatorInterface):
         rel_pos, rel_rotmat = rm.rel_pose(self.jlc.pos, self.jlc.rotmat, tgt_pos, tgt_rotmat)
         # target
         tgt_rotmat = rel_rotmat @ self.loc_tcp_rotmat.T
-        tgt_pos = rel_pos - rel_rotmat @ self.loc_tcp_pos
+        tgt_pos = rel_pos - tgt_rotmat @ self.loc_tcp_pos
         # DH parameters of nova2
         a2 = -0.280
         a3 = -0.22501
@@ -213,6 +218,7 @@ if __name__ == '__main__':
 
     random_conf = arm.rand_conf()
     tgt_pos, tgt_rotmat = arm.fk(random_conf)
+    mcm.mgm.gen_frame(pos=tgt_pos, rotmat=tgt_rotmat, ax_length=0.1).attach_to(base)
     tic = time.time()
     jv_list = arm.ik(tgt_pos=tgt_pos, tgt_rotmat=tgt_rotmat, option="multiple")
     toc = time.time()

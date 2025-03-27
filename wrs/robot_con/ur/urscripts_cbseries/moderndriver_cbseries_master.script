@@ -24,6 +24,7 @@ def driverProg():
 			cmd_servo_state = SERVO_IDLE
 			exit_critical
 			if do_brake:
+				stopj(1.0)
 				sync()
 			elif state == SERVO_RUNNING:
 				# textmsg(q)

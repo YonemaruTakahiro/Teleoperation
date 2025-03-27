@@ -11,7 +11,9 @@ import wrs.basis.data_adapter as da
 import wrs.modeling.collision_model as mcm
 import wrs.modeling.geometric_model as mgm
 
-BITMASK_EXT = BitMask32(2 ** 31)
+bitmask_ext = BitMask32.bit(31)
+bitmask_inner = BitMask32.bit(0)
+bitmask_pool = [BitMask32.bit(n) for n in range(1, 31)]
 
 
 def copy_cdprim(cmodel):
@@ -29,14 +31,15 @@ def copy_cdprim_attach_to(cmodel,
     # if scale is not None
     # return_pdcndp.setScale(da.npvec3_to_pdvec3(scale)) # 20231117 scale is not supported
     if clear_mask:
-        change_cdmask(return_pdcndp, BitMask32(0x00), action="new", type="both")
+        change_cdmask(return_pdcndp, BitMask32(), action="new", type="both")
     return return_pdcndp
 
 
 def detach_cdprim(cdprim):
     cdprim.removeNode()
 
-def get_cdmask(cdprim, type = "from"):
+
+def get_cdmask(cdprim, type="from"):
     if type == "from":
         get_method_name = "getFromCollideMask"
     elif type == "into":
@@ -125,7 +128,7 @@ def toggle_show_collision_node(cdprim, toggle_show_on=True):
 # generate cdprimitives from trimesh
 # ==================================
 
-def gen_aabb_box_pdcndp(trm_model, ex_radius=0.01):
+def gen_aabb_box_pdcndp(trm_model, name="aabb_box", ex_radius=0.01):
     """
     :param obstacle:
     :return:
@@ -135,15 +138,15 @@ def gen_aabb_box_pdcndp(trm_model, ex_radius=0.01):
     aabb = trm_model.aabb_bound
     sides = aabb.extents / 2.0 + ex_radius
     collision_primitive = CollisionBox(center=LPoint3(0, 0, 0), x=sides[0], y=sides[1], z=sides[2])
-    pdcnd = CollisionNode("aabb_box_cnode")
+    pdcnd = CollisionNode(name + "_cnode")
     pdcnd.addSolid(collision_primitive)
     pdcnd.setTransform(TransformState.makeMat(da.npmat4_to_pdmat4(aabb.homomat)))
-    cdprim = NodePath("aabb_box")
+    cdprim = NodePath(name + "_cdprim")
     cdprim.attachNewNode(pdcnd)
     return cdprim
 
 
-def gen_obb_box_pdcndp(trm_model, ex_radius=0.01):
+def gen_obb_box_pdcndp(trm_model, name="obb_box", ex_radius=0.01):
     """
     :param obstacle:
     :return:
@@ -153,15 +156,15 @@ def gen_obb_box_pdcndp(trm_model, ex_radius=0.01):
     obb = trm_model.obb_bound
     sides = obb.extents / 2.0 + ex_radius
     collision_primitive = CollisionBox(center=LPoint3(0, 0, 0), x=sides[0], y=sides[1], z=sides[2])
-    pdcnd = CollisionNode("obb_box_cnode")
+    pdcnd = CollisionNode(name + "_cnode")
     pdcnd.addSolid(collision_primitive)
     pdcnd.setTransform(TransformState.makeMat(da.npmat4_to_pdmat4(obb.homomat)))
-    cdprim = NodePath("obb_box")
+    cdprim = NodePath(name + "_cdprim")
     cdprim.attachNewNode(pdcnd)
     return cdprim
 
 
-def gen_capsule_pdcndp(trm_model, ex_radius=0.01):
+def gen_capsule_pdcndp(trm_model, name="capsule", ex_radius=0.01):
     """
     :param trm_model:
     :param radius:
@@ -173,15 +176,15 @@ def gen_capsule_pdcndp(trm_model, ex_radius=0.01):
     collision_primitive = CollisionCapsule(a=LPoint3(0, 0, -cyl.height / 2),
                                            db=LPoint3(0, 0, cyl.height / 2),
                                            radius=cyl.radius + ex_radius)
-    pdcnd = CollisionNode("capsule_cnode")
+    pdcnd = CollisionNode(name + "_cnode")
     pdcnd.addSolid(collision_primitive)
     pdcnd.setTransform(TransformState.makeMat(da.npmat4_to_pdmat4(cyl.homomat)))
-    cdprim = NodePath("capsule")
+    cdprim = NodePath(name + "_cdprim")
     cdprim.attachNewNode(pdcnd)
     return cdprim
 
 
-def gen_cylinder_pdcndp(trm_model, ex_radius=0.01):
+def gen_cylinder_pdcndp(trm_model, name="cylinder", ex_radius=0.01):
     """
     approximate cylinder using 3 boxes (rotate around central cylinderical axis)
     :param trm_model:
@@ -199,17 +202,17 @@ def gen_cylinder_pdcndp(trm_model, ex_radius=0.01):
                                        x=x_side,
                                        y=math.tan(angles[1] / 2) * x_side,
                                        z=cyl.height / 2.0)
-    cdprim = NodePath("cylinder")
+    cdprim = NodePath(name + "_cdprim")
     for i, angle in enumerate(angles):
         homomat = cyl.homomat @ rm.homomat_from_posrot(rotmat=rm.rotmat_from_axangle(np.array([0, 0, 1]), angle))
-        pdcnd = CollisionNode("cylinder" + f"_cnode_{i}")
+        pdcnd = CollisionNode(name + f"_cnode_{i}")
         pdcnd.addSolid(collision_primitive)
         pdcnd.setTransform(TransformState.makeMat(da.npmat4_to_pdmat4(homomat)))
         cdprim.attachNewNode(pdcnd)
     return cdprim
 
 
-def gen_surfaceballs_pdcnd(trm_mesh, radius=0.01):
+def gen_surfaceballs_pdcnd(trm_mesh, name="surface_balls", radius=0.01):
     """
     :param obstacle:
     :return:
@@ -220,18 +223,18 @@ def gen_surfaceballs_pdcnd(trm_mesh, radius=0.01):
     n_sample = int(math.ceil(trm_mesh.area / (radius * 0.3) ** 2))
     n_sample = 120 if n_sample > 120 else n_sample  # threshhold
     sample_data = trm_mesh.sample_surface(n_sample)
-    pdcnd = CollisionNode("surface_balls_cnode")
+    pdcnd = CollisionNode(name + "_cnode")
     for point in sample_data:
         pdcnd.addSolid(CollisionSphere(cx=point[0],
                                        cy=point[1],
                                        cz=point[2],
                                        radius=radius))
-    cdprim = NodePath("surface_balls")
+    cdprim = NodePath(name + "_cdprim")
     cdprim.attachNewNode(pdcnd)
     return cdprim
 
 
-def gen_pointcloud_pdcndp(trm_mesh, radius=0.02):
+def gen_pointcloud_pdcndp(trm_mesh, name="pointcloud", radius=0.02):
     """
     trm_mesh only have vertices that are considered to be point cloud
     :param obstacle:
@@ -239,10 +242,10 @@ def gen_pointcloud_pdcndp(trm_mesh, radius=0.02):
     author: weiwei
     date: 20191210
     """
-    pdcnd = CollisionNode("pointcloud_cnode")
+    pdcnd = CollisionNode(name + "_cnode")
     for point in trm_mesh.vertices:
         pdcnd.addSolid(CollisionSphere(cx=point[0], cy=point[1], cz=point[2], radius=radius))
-    cdprim = NodePath("pointcloud")
+    cdprim = NodePath(name + "_cdprim")
     cdprim.attachNewNode(pdcnd)
     return cdprim
 
@@ -302,7 +305,7 @@ def gen_pdndp_wireframe(trm_model,
 #     cprim_list0=[]
 #     for cmodel in cmodel_list0:
 #         cprim_list0.append(copy_cdprim_attach_to(cmodel, tgt_pdndp, homomat=cmodel.homomat, clear_mask=True))
-#         change_cdmask(cprim_list0[-1], BITMASK_EXT, action="remove", type="into")
+#         change_cdmask(cprim_list0[-1], bitmask_ext, action="remove", type="into")
 #         for child_pdcnd in cprim_list0[-1].getChildren():
 #             cd_trav.addCollider(collider=child_pdcnd, handler=cd_handler)
 #     cprim_list1=[]
@@ -348,7 +351,7 @@ def is_collided(cmodel_list0, cmodel_list1, toggle_contacts=False):
     # attach to collision tree, change bitmasks, and add colliders
     for cmodel in cmodel_list0:
         cdprim = cmodel.attach_cdprim_to(tgt_pdndp)
-        change_cdmask(cdprim, BITMASK_EXT, action="remove", type="into")
+        change_cdmask(cdprim, bitmask_ext, action="remove", type="into")
         for child_pdcnd in cdprim.getChildren():
             cd_trav.addCollider(collider=child_pdcnd, handler=cd_handler)
     for cmodel in cmodel_list1:
@@ -358,7 +361,7 @@ def is_collided(cmodel_list0, cmodel_list1, toggle_contacts=False):
     # detach from collision tree, change bitmasks, and remove colliders
     for cmodel in cmodel_list0:
         cmodel.detach_cdprim()
-        change_cdmask(cmodel.cdprim, BITMASK_EXT, action="add", type="into")
+        change_cdmask(cmodel.cdprim, bitmask_ext, action="add", type="into")
         for child_pdcnd in cmodel.cdprim.getChildren():
             cd_trav.removeCollider(child_pdcnd)
     for cmodel in cmodel_list1:

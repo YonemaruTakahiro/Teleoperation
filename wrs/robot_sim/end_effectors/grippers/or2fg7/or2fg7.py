@@ -37,6 +37,7 @@ class OR2FG7(gpi.GripperInterface):
         self.jlc.anchor.lnk_list[0].loc_rotmat = rm.rotmat_from_euler(0, 0, np.pi / 2)
         self.jlc.anchor.lnk_list[0].cmodel = mcm.CollisionModel(
             os.path.join(current_file_dir, "meshes", "base_link.stl"),
+            name="or2fg7_base",
             cdmesh_type=self.cdmesh_type)
         self.jlc.anchor.lnk_list[0].cmodel.rgba = rm.const.tab20_list[14]
         # the 1st joint (left finger, +y direction)
@@ -45,6 +46,7 @@ class OR2FG7(gpi.GripperInterface):
         self.jlc.jnts[0].loc_motion_ax = rm.const.y_ax
         self.jlc.jnts[0].lnk.cmodel = mcm.CollisionModel(
             initor=os.path.join(current_file_dir, "meshes", "inward_left_finger_link.stl"),
+            name="or2fg7_inward_left_finger",
             cdmesh_type=self.cdmesh_type,
             cdprim_type=mcm.const.CDPrimType.AABB)
         self.jlc.jnts[0].lnk.loc_rotmat = rm.rotmat_from_euler(0, 0, np.pi / 2)
@@ -55,6 +57,7 @@ class OR2FG7(gpi.GripperInterface):
         self.jlc.jnts[1].loc_motion_ax = rm.const.y_ax
         self.jlc.jnts[1].lnk.cmodel = mcm.CollisionModel(
             initor=os.path.join(current_file_dir, "meshes", "inward_right_finger_link.stl"),
+            name="or2fg7_inward_right_finger",
             cdmesh_type=self.cdmesh_type,
             cdprim_type=mcm.const.CDPrimType.AABB)
         self.jlc.jnts[1].lnk.loc_rotmat = rm.rotmat_from_euler(0, 0, np.pi / 2)
@@ -65,9 +68,9 @@ class OR2FG7(gpi.GripperInterface):
         self.loc_acting_center_pos = np.array([0, 0, .15]) + coupling_offset_pos
         # collision detection
         # collisions
-        self.cdmesh_elements = (self.jlc.anchor.lnk_list[0],
-                                self.jlc.jnts[0].lnk,
-                                self.jlc.jnts[1].lnk)
+        self.cdelements = (self.jlc.anchor.lnk_list[0],
+                           self.jlc.jnts[0].lnk,
+                           self.jlc.jnts[1].lnk)
 
     def fix_to(self, pos, rotmat, jaw_width=None):
         self._pos = pos
@@ -90,8 +93,8 @@ class OR2FG7(gpi.GripperInterface):
         else:
             raise ValueError(f"The angle parameter is out of range! {side_jawwidth} vs. {self.jaw_range}")
 
-    def gen_stickmodel(self, toggle_tcp_frame=False, toggle_jnt_frames=False, name='or2fg7_stickmodel'):
-        m_col = mmc.ModelCollection(name=name)
+    def gen_stickmodel(self, toggle_tcp_frame=False, toggle_jnt_frames=False):
+        m_col = mmc.ModelCollection(name=self.name+'_stickmodel')
         self.coupling.gen_stickmodel(toggle_root_frame=False, toggle_flange_frame=False).attach_to(m_col)
         self.jlc.gen_stickmodel(toggle_jnt_frames=toggle_jnt_frames, toggle_flange_frame=False).attach_to(m_col)
         if toggle_tcp_frame:
@@ -99,8 +102,8 @@ class OR2FG7(gpi.GripperInterface):
         return m_col
 
     def gen_meshmodel(self, rgb=None, alpha=None, toggle_tcp_frame=False, toggle_jnt_frames=False,
-                      toggle_cdprim=False, toggle_cdmesh=False, name='lite6_wrs_gripper_v2_meshmodel'):
-        m_col = mmc.ModelCollection(name=name)
+                      toggle_cdprim=False, toggle_cdmesh=False):
+        m_col = mmc.ModelCollection(name=self.name+'_meshmodel')
         self.coupling.gen_meshmodel(rgb=rgb,
                                     alpha=alpha,
                                     toggle_flange_frame=False,
