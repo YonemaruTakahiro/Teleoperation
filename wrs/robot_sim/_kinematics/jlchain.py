@@ -409,6 +409,7 @@ class JLChain(object):
         :param seed_jnt_values: the starting configuration used in the numerical iteration
         :return:
         """
+
         if self._ik_solver is None:
             raise Exception("IK solver undefined. Use JLChain.finalize to define it.")
         jnt_values = self._ik_solver(tgt_pos=tgt_pos,

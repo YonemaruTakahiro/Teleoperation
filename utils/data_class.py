@@ -27,10 +27,15 @@ class animation:
         return e
 
 
+
+
 class multi_finger_animation:
-    def __init__(self, tgt_pos, tgt_rotmat, manipulator_jnt_values, xhand_jnt_values, mesh_model, robot_model):
-        self.tgt_pos = tgt_pos
-        self.tgt_rotmat = tgt_rotmat
+    def __init__(self, current_pos, current_rot,manipulator_jnt_values, xhand_jnt_values,
+                 mesh_model, robot_model):
+        self.current_pos = current_pos
+        self.current_rotmat = current_rot
+        self.tgt_pos = None
+        self.tgt_rotmat = None
         self.thumb_position = None
         self.index_position = None
         self.middle_position = None
@@ -58,6 +63,19 @@ class multi_finger_animation:
         e = np.square(e)
         e = np.sum(e)
         return e
+
+    @staticmethod
+    def modify_abnormal_pos_distance(current_pos,next_pos):
+        e = current_pos - next_pos
+        e = np.square(e)
+        e = np.sum(e)
+        e=np.sqrt(e)
+
+        if e>0.015:
+            tgt_pos=current_pos+(e/np.linalg.norm(e))*0.015
+            return tgt_pos
+        else:
+            return next_pos
 
 
 class animation_sim:
@@ -88,12 +106,11 @@ class animation_sim:
 
 
 class WiLor_Data:
-    def __init__(self, eef_pos=None, eef_rotmat=None, keypoints_3d=None,human_hand_rotmat=None):
+    def __init__(self, eef_pos=None, eef_rotmat=None, keypoints_3d=None, human_hand_rotmat=None):
         self.eef_pos = eef_pos
         self.eef_rotmat = eef_rotmat
         self.keypoints_3d = keypoints_3d
-        self.human_hand_rotmat=human_hand_rotmat
-
+        self.human_hand_rotmat = human_hand_rotmat
 
 
 class Data(object):

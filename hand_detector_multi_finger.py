@@ -217,9 +217,9 @@ class HandDetector_multifinger:
 
 
             ##平行移動
-            pos[0] += 0.28
-            pos[1] += 0.25
-            pos[2] -= 0.4
+            pos[0] += 0.4
+            pos[1] -= 0.3
+            pos[2] += 0.0
 
             return pos
         else:
@@ -243,10 +243,12 @@ class HandDetector_multifinger:
         ##手の上の姿勢変換
         # rotmat1 = np.array([[np.cos(np.pi), 0, np.sin(np.pi)], [0, 1, 0], [-np.sin(np.pi), 0, np.cos(np.pi)]])
         rotmat2 = np.array(
-            [[1, 0, 0], [0, np.cos(np.pi / 2), -np.sin(np.pi / 2)], [0, np.sin(np.pi / 2), np.cos(np.pi / 2)]])
+            [[1, 0, 0], [0, np.cos(-np.pi / 2), -np.sin(-np.pi / 2)], [0, np.sin(-np.pi / 2), np.cos(-np.pi / 2)]])
 
         # np_verts = convert @ np_verts @ rotmat1 @ rotmat2
 
         np_verts = convert @ np_verts @ rotmat2
+        #
+        # np_verts = np_verts @ rotmat2
 
         return np_verts

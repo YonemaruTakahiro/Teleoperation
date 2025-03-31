@@ -111,6 +111,26 @@ class DualArmRobotInterface(ri.RobotInterface):
             self._delegator.restore_state()
             return result
 
+    def realtime_ik(self, tgt_pos, tgt_rotmat, seed_jnt_values=None, obstacle_list=None, toggle_dbg=False):
+        if self._delegator is None:
+            raise AttributeError("IK is not available in multi-arm mode.")
+        else:
+            candidates = self._delegator.ik(tgt_pos=tgt_pos, tgt_rotmat=tgt_rotmat, seed_jnt_values=seed_jnt_values,
+                                           option="multiple", toggle_dbg=toggle_dbg)
+            if candidates is None:
+                return None
+            result = None
+            # self._delegator.backup_state()
+            for jnt_values in candidates:
+                self._delegator.goto_given_conf(jnt_values=jnt_values)
+                if self.is_collided(obstacle_list=obstacle_list, toggle_contacts=False):
+                    continue
+                else:
+                    result = jnt_values
+                    break
+            # self._delegator.restore_state()
+            return result
+
     def goto_given_conf(self, jnt_values, ee_values=None):
         """
         :param jnt_values: nparray 1x14, 0:7lft, 7:14rgt
