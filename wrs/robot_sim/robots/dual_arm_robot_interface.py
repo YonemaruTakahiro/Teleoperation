@@ -111,36 +111,6 @@ class DualArmRobotInterface(ri.RobotInterface):
             self._delegator.restore_state()
             return result
 
-    @staticmethod
-    def abnormal_jnts_change_detection(current_jnt_values, next_jnt_values):
-        jnts_change_degree = next_jnt_values - current_jnt_values
-        abs_jnts_change_degree = np.abs(jnts_change_degree)
-        for angle in abs_jnts_change_degree:
-            if angle > np.pi / 7:
-                return True
-        return False
-
-    def realtime_ik(self, tgt_pos, tgt_rotmat, seed_jnt_values=None, obstacle_list=None, toggle_dbg=False):
-        if self.delegator is None:
-            raise AttributeError("IK is not available in multi-arm mode.")
-        else:
-            candidates = self.delegator.ik(tgt_pos=tgt_pos, tgt_rotmat=tgt_rotmat, seed_jnt_values=seed_jnt_values,
-                                           option="multiple", toggle_dbg=toggle_dbg)
-            if candidates is None:
-                return None
-            result = None
-            # self.delegator.backup_state()
-
-            for jnt_values in candidates:
-                self.delegator.goto_given_conf(jnt_values=jnt_values)
-                if self.is_collided(obstacle_list=obstacle_list, toggle_contacts=False) or self.abnormal_jnts_change_detection(seed_jnt_values,jnt_values):
-                    continue
-                else:
-                    result = jnt_values
-                    break
-            # self.delegator.restore_state()
-            return result
-
     def goto_given_conf(self, jnt_values, ee_values=None):
         """
         :param jnt_values: nparray 1x14, 0:7lft, 7:14rgt

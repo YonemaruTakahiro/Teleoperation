@@ -157,3 +157,96 @@ class HandDetector_multifinger:
 
         V_2d = (K @ points.T).T
         return V_2d[..., :-1]
+
+    def calib(self, pos_2d, depth, intrinsics):
+
+        if 0 < pos_2d[0] < self.width and 0 < pos_2d[1] < self.height:
+            point_depth = depth.get_distance(round(pos_2d[0]), round(pos_2d[1]))
+            ##カメラの内部パラメータからx,yの世界座標を得る
+            keypoint = rs.rs2_deproject_pixel_to_point(intrinsics, [round(pos_2d[0]), round(pos_2d[1])], point_depth)
+            keypoint = np.array(keypoint)
+            return keypoint
+        else:
+            return None
+
+    @staticmethod
+    def distance_between_fingers_normalization(pos1, pos2):
+        pos1 = np.array(pos1)
+        pos2 = np.array(pos2)
+        v = pos1 - pos2
+        v_square = np.square(v)
+        l = np.sqrt(np.sum(v_square))
+        return l
+
+    @staticmethod
+    def coor_trans_from_rs_to_wrs(keypoint_3d_array: np.ndarray):
+        if keypoint_3d_array is not None:
+            pos = keypoint_3d_array
+
+            ##座標系をwrsの座標系の向きに
+            rotmat1 = np.array(
+                [[np.cos(np.pi / 2), -np.sin(np.pi / 2), 0], [np.sin(np.pi / 2), np.cos(np.pi / 2), 0], [0, 0, 1]])
+            pos_t = pos.T
+            pos_t = rotmat1 @ pos_t
+            pos = pos_t.T
+
+            # 座標の反転
+            pos[0] = -pos[0]
+            pos[1] = -pos[1]
+
+            ##平行移動
+            pos[0] += 0.38
+            pos[1] -= 0.25
+            pos[2] += 0.58
+
+            return pos
+        else:
+            return None
+
+    @staticmethod
+    def coor_trans_from_rs_to_xarm(keypoint_3d_array: np.ndarray):
+        if keypoint_3d_array is not None:
+            pos = keypoint_3d_array
+
+            ##座標系をwrsの座標系の向きに
+            rotmat1 = np.array(
+                [[np.cos(np.pi / 2), -np.sin(np.pi / 2), 0], [np.sin(np.pi / 2), np.cos(np.pi / 2), 0], [0, 0, 1]])
+            pos_t = pos.T
+            pos_t = rotmat1 @ pos_t
+            pos = pos_t.T
+
+
+            ##平行移動
+            pos[0] += 0.28
+            pos[1] += 0.25
+            pos[2] -= 0.4
+
+            return pos
+        else:
+            return None
+
+    @staticmethod
+    def parse_keypoint_3d(all_joints) -> np.ndarray:
+        keypoint_3d = np.empty([21, 3])
+        for i in range(21):
+            keypoint_3d[i] = np.ndarray(all_joints[i])
+        return keypoint_3d
+
+    @staticmethod
+    def rotmat_to_xarm(verts) -> np.ndarray:
+        np_verts = np.array(verts)
+
+        ##WRS上の座標系に対する手の向きの変換
+        convert = np.array(
+            [[np.cos(np.pi / 2), -np.sin(np.pi / 2), 0], [np.sin(np.pi / 2), np.cos(np.pi / 2), 0], [0, 0, 1]])
+
+        ##手の上の姿勢変換
+        # rotmat1 = np.array([[np.cos(np.pi), 0, np.sin(np.pi)], [0, 1, 0], [-np.sin(np.pi), 0, np.cos(np.pi)]])
+        rotmat2 = np.array(
+            [[1, 0, 0], [0, np.cos(np.pi / 2), -np.sin(np.pi / 2)], [0, np.sin(np.pi / 2), np.cos(np.pi / 2)]])
+
+        # np_verts = convert @ np_verts @ rotmat1 @ rotmat2
+
+        np_verts = convert @ np_verts @ rotmat2
+
+        return np_verts

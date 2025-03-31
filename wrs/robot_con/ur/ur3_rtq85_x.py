@@ -205,20 +205,6 @@ class UR3Rtq85X(object):
         rbt_socket.send(buf)
         rbt_socket.close()
 
-    def move_jspace_path_realtime(self,rbt_socket,path):
-        # self._arm.send_program(self._modern_driver_urscript)
-        # rbt_socket, rbt_socket_addr = self._pc_server_socket.accept()
-
-        keepalive = 1
-        jointsradint = [int(jnt_value * self._jnts_scaler) for jnt_value in path[-1]]
-        buf = struct.pack('!iiiiiii', jointsradint[0], jointsradint[1], jointsradint[2],
-                           jointsradint[3], jointsradint[4], jointsradint[5], keepalive)
-
-
-        rbt_socket.send(buf)
-        # data = rbt_socket.recv(4)
-        # rbt_socket.close()
-
     def get_jnt_values(self):
         """
         get the joint angles in radian

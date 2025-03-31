@@ -15,7 +15,7 @@ class xhand_K():
         self.hand_configs = get_yaml_data("xhand_model/configs/xhand_info.yaml")
         self.finger_configs = get_yaml_data("xhand_model/configs/xhand_link_info.yaml")
 
-        self.wrist_offset = [-0.02, -0.02, 0.03]#wilorの座標系
+        self.wrist_offset = [-0.04, -0.01, 0.015]#wilorの座標系
         self.human_ori_to_wrs = np.array(
             [[1, 0, 0], [0, np.cos(np.pi), -np.sin(np.pi)], [0, np.sin(np.pi), np.cos(np.pi)]]) @ np.array(
             [[np.cos(-np.pi / 2), 0, -np.sin(-np.pi / 2)], [0, 1, 0], [np.sin(-np.pi / 2), 0, np.cos(-np.pi / 2)]])
@@ -161,7 +161,7 @@ class xhand_K():
             seed = list(seed)
             seed.insert(0, 0)
             seed.append(0)
-        print(f"{finger_type}:{seed}")
+
         output_angles = self.chains[finger_type].inverse_kinematics(input_position, initial_position=seed)
 
         return output_angles[1:-1]
@@ -200,16 +200,14 @@ class xhand_K():
 
             thumb_joints_angles = self.finger_inverse_kinematics('thumb', xhand_thumb_position, seed=angles_list[:3])
             index_joints_angles = self.finger_inverse_kinematics('index', xhand_index_position, seed=angles_list[3:6])
-            middle_joints_angles = self.finger_inverse_kinematics('middle', xhand_middle_position,
-                                                                  seed=angles_list[6:8])
+            middle_joints_angles = self.finger_inverse_kinematics('middle', xhand_middle_position, seed=angles_list[6:8])
             ring_joints_angles = self.finger_inverse_kinematics('ring', xhand_ring_position, seed=angles_list[8:10])
             pinky_joints_angles = self.finger_inverse_kinematics('pinky', xhand_pinky_position, seed=angles_list[10:12])
 
         else:
             thumb_joints_angles = self.finger_inverse_kinematics('thumb', xhand_thumb_position, seed=seed_angles[:3])
             index_joints_angles = self.finger_inverse_kinematics('index', xhand_index_position, seed=seed_angles[3:6])
-            middle_joints_angles = self.finger_inverse_kinematics('middle', xhand_middle_position,
-                                                                  seed=seed_angles[6:8])
+            middle_joints_angles = self.finger_inverse_kinematics('middle', xhand_middle_position,seed=seed_angles[6:8])
             ring_joints_angles = self.finger_inverse_kinematics('ring', xhand_ring_position, seed=seed_angles[8:10])
             pinky_joints_angles = self.finger_inverse_kinematics('pinky', xhand_pinky_position, seed=seed_angles[10:12])
 
