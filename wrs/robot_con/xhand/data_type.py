@@ -40,8 +40,8 @@ CRC16_TABLE = [
 ]
 
 FINGER_COMMAND_FORMAT = "<Hhhh f H H H H H H"  # LSB, 24 bytes
-FINGER_STATE_FORMAT = "<BB f H H H H H H H H H"  # LSB, 22 bytes
-SENSOR_DATA_FORMAT = "<bbb" + "bbb" * 120 + "B" * 20 + "B"  # 366 bytes (3, 120x3, 20, 1))
+FINGER_STATE_FORMAT = "<BB f H H H H H H H H H"  # LSB, 24 bytes
+SENSOR_DATA_FORMAT = "<bbb" + "bbb" * 120 + "B" * 20 + "B"  # 384 bytes (3, 120x3, 20, 1))
 
 class FingerState:
     def __init__(self, id, sensor_id, position, torque, raw_position, temperature,
@@ -64,6 +64,7 @@ class FingerState:
         unpacked = struct.unpack(FINGER_STATE_FORMAT, data)
         return cls(*unpacked)
 
+#    one
 class SensorData:
     def __init__(self, fx, fy, fz, force_data, temp_data, temp_total):
         self.fx = fx
@@ -161,15 +162,15 @@ def parse_rs485_response(response):
     finger_states = []
     offset = 0
     for i in range(12):
-        finger_state_data = data_segment[offset:offset + 22]
+        finger_state_data = data_segment[offset:offset + 24]
         finger_states.append(FingerState.from_bytes(finger_state_data))
-        offset += 22
+        offset += 24
     # sensor data
     sensor_data_list = []
     for i in range(5):
-        sensor_data_bytes = data_segment[offset:offset + 366]
+        sensor_data_bytes = data_segment[offset:offset + 384]
         sensor_data_list.append(SensorData.from_bytes(sensor_data_bytes))
-        offset += 366
+        offset += 384
     return {
         "source_id": src_id,
         "dest_id": dest_id,
