@@ -11,7 +11,7 @@ class XHandRight(ei.EEInterface):
 
     def __init__(self, pos=rm.zeros(3), rotmat=rm.eye(3),
                  coupling_offset_pos=rm.zeros(3),
-                         coupling_offset_rotmat=rm.eye(3),
+                 coupling_offset_rotmat=rm.eye(3),
                  cdmesh_type=mcm.const.CDMeshType.AABB, name='xhand_right'):
         super().__init__(pos=pos, rotmat=rotmat, cdmesh_type=cdmesh_type, name=name)
         current_file_dir = os.path.dirname(__file__)
@@ -46,8 +46,8 @@ class XHandRight(ei.EEInterface):
         # backup
         self.jaw_width_bk = []
         # acting center
-        self.loc_acting_center_pos = rm.vec(0,-0.075,.075)
-        self.loc_acting_center_rotmat = rm.rotmat_from_euler(rm.pi/2,rm.pi/2,0)
+        self.loc_acting_center_pos = rm.vec(0, -0.075, .075)
+        self.loc_acting_center_rotmat = rm.rotmat_from_euler(rm.pi / 2, rm.pi / 2, 0)
         # collision detection
         # collisions
         self.cdelements = (self.palm.lnk_list[0],
@@ -252,7 +252,7 @@ class XHandRight(ei.EEInterface):
         if jaw_width != self.get_jaw_width():
             self.change_jaw_width(jaw_width=jaw_width)
 
-    def fix_to(self, pos, rotmat):
+    def fix_to(self, pos, rotmat, jaw_width=None):
         self._pos = pos
         self._rotmat = rotmat
         self.coupling.pos = self._pos
@@ -335,7 +335,8 @@ class XHandRight(ei.EEInterface):
                        toggle_fingertip_frames=False):
         m_col = mmc.ModelCollection(name=self.name + '_stickmodel')
         self.coupling.gen_stickmodel(toggle_root_frame=False, toggle_flange_frame=False).attach_to(m_col)
-        self.palm.gen_stickmodel(toggle_root_frame=toggle_jnt_frames, toggle_flange_frame=toggle_fingertip_frames).attach_to(
+        self.palm.gen_stickmodel(toggle_root_frame=toggle_jnt_frames,
+                                 toggle_flange_frame=toggle_fingertip_frames).attach_to(
             m_col)
         self.thumb_jlc.gen_stickmodel(toggle_jnt_frames=toggle_jnt_frames,
                                       toggle_flange_frame=toggle_fingertip_frames).attach_to(m_col)

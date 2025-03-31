@@ -29,6 +29,7 @@ def wilor_to_xhand(queue1: multiprocessing.Queue):
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     model, model_cfg = load_wilor(checkpoint_path='./pretrained_models/wilor_final.ckpt',
                                   cfg_path='./pretrained_models/model_config.yaml')
+
     # Setup the renderer
     renderer = Renderer(model_cfg, faces=model.mano.faces)  ##3Dグラフィックを表示するためのオブジェクト
     model = model.to(device)
@@ -98,6 +99,7 @@ def wilor_to_xhand(queue1: multiprocessing.Queue):
             # 結果を表示
             cv2.imshow('Hand Tracking', img_vis)
 
+
             if cv2.waitKey(1) & 0xFF == 27:  # ESCキーで終了
                 break
 
@@ -151,7 +153,7 @@ def wrs(queue1: multiprocessing.Queue):
 
     def update(animation_data, wilor_data, task):
 
-        q = queue1.get(timeout=5)
+        q = queue1.get(timeout=20)
 
         if q is not None:
             if q[0] is not None and q[1] is not None and q[2] is not None and q[3] is not None:

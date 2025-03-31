@@ -11,12 +11,13 @@ class XArm7XHR(sari.SglArmRobotInterface):
     def __init__(self, pos=np.zeros(3), rotmat=np.eye(3), name="xarm7", enable_cc=True):
         super().__init__(pos=pos, rotmat=rotmat, name=name, enable_cc=enable_cc)
         self.manipulator = manipulator.XArm7(pos=self.pos, rotmat=self.rotmat, name=name + "_manipulator",
-                                             home_conf=rm.vec(rm.pi/6, rm.pi/6, rm.pi/12, rm.pi/3, rm.pi, rm.pi/3, -rm.pi/2),
+                                             home_conf=rm.vec(rm.pi / 6, rm.pi / 6, rm.pi / 12, rm.pi / 3, rm.pi,
+                                                              rm.pi / 3, -rm.pi / 2),
                                              enable_cc=False)
         self.end_effector = end_effector.XHandRight(pos=self.manipulator.gl_flange_pos,
                                                     rotmat=self.manipulator.gl_flange_rotmat,
                                                     coupling_offset_pos=rm.zeros(3),
-                                                    coupling_offset_rotmat=rm.rotmat_from_euler(0,0,rm.pi),
+                                                    coupling_offset_rotmat=rm.rotmat_from_euler(0, 0, rm.pi),
                                                     name=name + "_eef")
         # tool center point
         self.manipulator.loc_tcp_pos = self.end_effector.loc_acting_center_pos
@@ -45,7 +46,7 @@ class XArm7XHR(sari.SglArmRobotInterface):
         self.cc.enable_innercd_by_id_list(id_list=[ml0, ml1, ml2, ml3], type="into")
         self.cc.dynamic_ext_list = ee_cces[1:]
 
-    def fix_to(self, pos, rotmat):
+    def fix_to(self, pos, rotmat, jaw_width=None):
         self._pos = pos
         self._rotmat = rotmat
         self.manipulator.fix_to(pos=pos, rotmat=rotmat)
