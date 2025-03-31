@@ -152,7 +152,7 @@ def wrs(queue1: multiprocessing.Queue):
 
     def update(animation_data, wilor_data, task):
 
-        q = queue1.get(timeout=20)
+        q = queue1.get(timeout=5)
 
         if q is not None:
             if q[0] is not None and q[1] is not None and q[2] is not None and q[3] is not None:
