@@ -123,7 +123,7 @@ def wrs(queue1: multiprocessing.Queue):
     base = wd.World(cam_pos=rm.vec(0.5, 0.5, 0.7), lookat_pos=rm.vec(0, 0, .0))
     mgm.gen_frame(pos=[0, 0, 0], rotmat=rm.eye(3)).attach_to(base)
     xhand = xhr.XHandRight(pos=rm.vec(0, 0, 0), rotmat=rm.rotmat_from_euler(0, 0, 0))
-    # xhexe = xhx.XHandX("/dev/ttyUSB0")
+    xhexe = xhx.XHandX("/dev/ttyUSB0")
     xhand_k = xhand_K()
 
     t_start = time.monotonic()
@@ -173,7 +173,7 @@ def wrs(queue1: multiprocessing.Queue):
                                                                        seed_angles=current_joints_list)
 
             xhand.goto_given_conf(desired_joints_angles)
-
+            xhexe.goto_given_conf(desired_joints_angles)
             for ele in onscreen_list:
                 ele.detach()
             for mesh in meshscreen_list:

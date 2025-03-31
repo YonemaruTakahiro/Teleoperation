@@ -1,8 +1,8 @@
 from hand_detector_multi_finger import HandDetector_multifinger
-from data_class import animation,handdata,Data
-from keystroke_counter import (
-    KeystrokeCounter, Key, KeyCode
-)
+# from data_class import animation,handdata,Data
+# from keystroke_counter import (
+#     KeystrokeCounter, Key, KeyCode
+# )
 
 import pickle
 from pathlib import Path
@@ -19,7 +19,7 @@ from wrs.robot_sim.end_effectors.multifinger.xhand import xhand_right as xhr
 from wrs.robot_con.xhand import xhand_x as xhx
 
 from ultralytics import YOLO
-from precise_sleep import precise_wait
+from utils.precise_sleep import precise_wait
 from wilor.models import WiLoR, load_wilor
 from wilor.utils import recursive_to
 from wilor.datasets.vitdet_dataset import ViTDetDataset, DEFAULT_MEAN, DEFAULT_STD
@@ -124,9 +124,9 @@ def wilor_to_wrs(queue1: multiprocessing.Queue):
 
 def wrs(queue1: multiprocessing.Queue):
 
-    # base = wd.World(cam_pos=rm.vec(0.5, 0.5, 0.7), lookat_pos=rm.vec(0, 0, .0))
-    # xhand = xhr.XHandRight(pos=rm.vec(0, 0, 0), rotmat=rm.rotmat_from_euler(0, 0, 0))
-    # xhexe = xhx.XHandX("/dev/ttyUSB0")
+    base = wd.World(cam_pos=rm.vec(0.5, 0.5, 0.7), lookat_pos=rm.vec(0, 0, .0))
+    xhand = xhr.XHandRight(pos=rm.vec(0, 0, 0), rotmat=rm.rotmat_from_euler(0, 0, 0))
+    xhexe = xhx.XHandX("/dev/ttyUSB0")
 
     t_start = time.monotonic()
     iter_idx = 0
@@ -139,7 +139,7 @@ def wrs(queue1: multiprocessing.Queue):
     jnt_list = None
 
 
-    # onscreen_list= []
+    onscreen_list= []
     value = 0
     try:
         while True:
@@ -152,16 +152,16 @@ def wrs(queue1: multiprocessing.Queue):
 
             angles = queue1.get(timeout=60)
             print(f"angles:{angles}")
-            # precise_wait(t_sample)
-            # if angles is not None:
-                # for joint, angle in angles.items():
-                #     print(f"{joint}: {np.degrees(angle):.2f}°")
-                # xhand.goto_given_conf(rm.np.array(list(angles.values())))
-                # for ele in onscreen_list:
-                #     ele.detach()
-                # onscreen_list.append(xhand.gen_meshmodel())
-                # onscreen_list[-1].attach_to(base)
-                # xhexe.goto_given_conf(rm.np.array(list(angles.values())))
+            precise_wait(t_sample)
+            if angles is not None:
+                for joint, angle in angles.items():
+                    print(f"{joint}: {np.degrees(angle):.2f}°")
+                xhand.goto_given_conf(rm.np.array(list(angles.values())))
+                for ele in onscreen_list:
+                    ele.detach()
+                onscreen_list.append(xhand.gen_meshmodel())
+                onscreen_list[-1].attach_to(base)
+                xhexe.goto_given_conf(rm.np.array(list(angles.values())))
             precise_wait(t_cycle_end)
             iter_idx += 1
             t2=time.time()

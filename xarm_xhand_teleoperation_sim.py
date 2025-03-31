@@ -140,7 +140,7 @@ def wrs(queue1: multiprocessing.Queue):
     start_robot_model = robot.gen_meshmodel(alpha=1, toggle_tcp_frame=True, toggle_jnt_frames=False)
     start_mesh_model = mgm.gen_frame(pos=start_manipulator_pos, rotmat=start_manipulator_rotmat)
 
-    # start_mesh_model.attach_to(base)
+    start_mesh_model.attach_to(base)
     start_robot_model.attach_to(base)
 
     # robot.gen_stickmodel(toggle_tcp_frame=True, toggle_jnt_frames=True).attach_to(base)
