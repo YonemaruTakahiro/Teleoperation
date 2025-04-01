@@ -15,7 +15,7 @@ class xhand_K():
         self.hand_configs = get_yaml_data("xhand_model/configs/xhand_info.yaml")
         self.finger_configs = get_yaml_data("xhand_model/configs/xhand_link_info.yaml")
 
-        self.wrist_offset = [-0.04, -0.01, 0.015]#wilorの座標系
+        self.wrist_offset = [-0.025, -0.01, 0.015]#wilorの座標系
         self.human_ori_to_wrs = np.array(
             [[1, 0, 0], [0, np.cos(np.pi), -np.sin(np.pi)], [0, np.sin(np.pi), np.cos(np.pi)]]) @ np.array(
             [[np.cos(-np.pi / 2), 0, -np.sin(-np.pi / 2)], [0, 1, 0], [np.sin(-np.pi / 2), 0, np.cos(-np.pi / 2)]])
