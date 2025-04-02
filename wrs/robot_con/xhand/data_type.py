@@ -141,6 +141,7 @@ def create_full_packet(command, data):
     crc = crc16(frame_header + src_id + dest_id + command + data_length + data)
     return frame_header + src_id + dest_id + command + data_length + data + crc
 
+###########この関数を使えば良い###################################3
 def parse_rs485_response(response):
     # ignore if response is too short
     if len(response) < 7:

@@ -1,7 +1,13 @@
 import numpy as np
 import wrs.modeling.model_collection as mmc
 import wrs.robot_sim.robots.robot_interface as ri
-
+def abnormal_jnts_change_detection(current_jnt_values, next_jnt_values, threshold):
+    jnts_change_degree = next_jnt_values - current_jnt_values
+    abs_jnts_change_degree = np.abs(jnts_change_degree)
+    for angle in abs_jnts_change_degree:
+        if angle > threshold:
+            return True
+    return False
 
 class DualArmRobotInterface(ri.RobotInterface):
 
@@ -103,7 +109,7 @@ class DualArmRobotInterface(ri.RobotInterface):
             self._delegator.backup_state()
             for jnt_values in candidates:
                 self._delegator.goto_given_conf(jnt_values=jnt_values)
-                if self.is_collided(obstacle_list=obstacle_list, toggle_contacts=False):
+                if self.is_collided(obstacle_list=obstacle_list, toggle_contacts=False) or abnormal_jnts_change_detection():
                     continue
                 else:
                     result = jnt_values
@@ -123,7 +129,7 @@ class DualArmRobotInterface(ri.RobotInterface):
             # self._delegator.backup_state()
             for jnt_values in candidates:
                 self._delegator.goto_given_conf(jnt_values=jnt_values)
-                if self.is_collided(obstacle_list=obstacle_list, toggle_contacts=False):
+                if self.is_collided(obstacle_list=obstacle_list, toggle_contacts=False) or abnormal_jnts_change_detection(seed_jnt_values,jnt_values,threshold=np.pi/24):
                     continue
                 else:
                     result = jnt_values

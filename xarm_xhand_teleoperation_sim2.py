@@ -1,4 +1,5 @@
-from hand_detector_multi_finger import HandDetector_multifinger
+import hand_keypoints_transform
+from wilor_mini.pipelines.wilor_hand_pose3d_estimation_pipeline import WiLorHandPose3dEstimationPipeline
 from utils.data_class import multi_finger_animation, WiLor_Data, Data
 from xhand_class_ikpy import xhand_K
 from utils.teleoperation_utils import abnormal_jnts_change_detection
@@ -14,34 +15,15 @@ from loguru import logger
 from wrs import wd, rm, ur3d, rrtc, mgm, mcm
 from wrs.robot_sim.robots.xarm7_dual import xarm7_dual as x7xh
 
-from ultralytics import YOLO
-from utils.precise_sleep import precise_wait
-from wilor.models import WiLoR, load_wilor
-from wilor.utils import recursive_to
-from wilor.datasets.vitdet_dataset import ViTDetDataset, DEFAULT_MEAN, DEFAULT_STD
-from wilor.utils.renderer import Renderer, cam_crop_to_full
-import struct
-
 WIDTH = 1280
 HEIGHT = 720
-
 
 def wilor_to_xhand(queue1: multiprocessing.Queue):
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     dtype = torch.float16
 
-    model, model_cfg = load_wilor(checkpoint_path='./pretrained_models/wilor_final.ckpt',
-                                  cfg_path='./pretrained_models/model_config.yaml')
-
-    # Setup the renderer
-    renderer = Renderer(model_cfg, faces=model.mano.faces)  ##3Dグラフィックを表示するためのオブジェクト
-    model = model.to(device)
-    model.eval()
-
-    detector = YOLO(f'./pretrained_models/detector.pt').to(device)
-    hand_detector = HandDetector_multifinger(device, model, model_cfg, renderer, detector, hand_type="Right",
-                                             detect_hand_num=1, WIDTH=1280, HEIGHT=720)
-
+    pipe = WiLorHandPose3dEstimationPipeline(device=device, dtype=dtype)
+    print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAaa")
     # RealSenseカメラの設定
     pipeline_hand = rs.pipeline()
     config_hand = rs.config()
@@ -95,25 +77,31 @@ def wilor_to_xhand(queue1: multiprocessing.Queue):
             # BGR画像をNumPy配列に変換
             frame = np.asanyarray(color_frame.get_data())
 
-            img_vis, detected_hand_count, reconstructions = hand_detector.run_wilow_model(frame, IoU_threshold=0.3)
+            outputs=pipe.predict(frame)
+
             detected_time = time.time()
             # output_img, text = hand_detector.render_reconstruction(img_vis, detected_hand_count, reconstructions)
 
             # 結果を表示
-            cv2.imshow('Hand Tracking', img_vis)
+            cv2.imshow('Hand Tracking', frame)
 
             if cv2.waitKey(1) & 0xFF == 27:  # ESCキーで終了
                 break
 
-            if detected_hand_count == 1:
-                kpts_2d = hand_detector.keypoints_2d_on_image(reconstructions['joints_points'][0],
-                                                              reconstructions['cam_t'][0], reconstructions['focal'])
-                eef_pos = hand_detector.calib(kpts_2d[0].tolist(), result_depth_frame, intrinsics)
-                eef_pos = hand_detector.coor_trans_from_rs_to_xarm(eef_pos)
-                human_hand_rotmat = reconstructions['rotmat'][0]
-                eef_rotmat = hand_detector.rotmat_to_xarm(human_hand_rotmat)
-                # rotmat = hand_detector.fixed_rotmat_to_wrs(reconstructions['joints'][0])
-                q = [eef_pos, eef_rotmat, reconstructions['joints_points'][0], human_hand_rotmat]
+            print(f"outputs:{outputs}")
+            if len(outputs) > 0:
+                for hand in outputs:
+                    if hand["is_right"]:
+                        print("AAAAAAAAA")
+                        keypoints = hand["wilor_preds"]["pred_keypoints_3d"]  # Shape: (N, 21, 3)  -> 3D Keypoints
+                        kpts_2d = hand["wilor_preds"]["pred_keypoints_2d"]
+                        eef_pos = hand_keypoints_transform.calib(kpts_2d[0].tolist(), result_depth_frame, intrinsics)
+                        eef_pos = hand_keypoints_transform.coor_trans_from_rs_to_xarm(eef_pos)
+                        human_hand_rotmat = hand["wilor_preds"]["global_orient"]
+                        eef_rotmat = hand_keypoints_transform.rotmat_to_xarm(human_hand_rotmat)
+                        # rotmat = hand_keypoints_transform.fixed_rotmat_to_wrs(keypoints['joints'][0])
+                        q = [eef_pos, eef_rotmat, keypoints[0], human_hand_rotmat]
+                    break
             else:
                 q = None
 
@@ -142,7 +130,7 @@ def wrs(queue1: multiprocessing.Queue):
     start_robot_model = robot.gen_meshmodel(alpha=1, toggle_tcp_frame=True, toggle_jnt_frames=False)
     start_mesh_model = mgm.gen_frame(pos=start_manipulator_pos, rotmat=start_manipulator_rotmat)
 
-    start_mesh_model.attach_to(base)
+    # start_mesh_model.attach_to(base)
     start_robot_model.attach_to(base)
 
     # robot.gen_stickmodel(toggle_tcp_frame=True, toggle_jnt_frames=True).attach_to(base)
@@ -154,7 +142,7 @@ def wrs(queue1: multiprocessing.Queue):
 
     def update(animation_data, wilor_data, task):
 
-        q = queue1.get(timeout=5)
+        q = queue1.get(timeout=20)
 
         if q is not None:
             if q[0] is not None and q[1] is not None and q[2] is not None and q[3] is not None:
@@ -163,14 +151,14 @@ def wrs(queue1: multiprocessing.Queue):
                 wilor_data.keypoints_3d = q[2]
                 wilor_data.human_hand_rotmat = q[3]
 
-                # if animation_data.pos_error(wilor_data.eef_pos,
-                #                             animation_data.current_pos) > 0.015 or animation_data.rotmat_error(
-                #         wilor_data.eef_rotmat, animation_data.current_rotmat) > 0.05:
-                #     animation_data.tgt_pos = animation_data.current_pos
-                #     animation_data.tgt_rotmat = animation_data.current_rotmat
-                # else:
-                animation_data.tgt_pos = wilor_data.eef_pos
-                animation_data.tgt_rotmat = wilor_data.eef_rotmat
+                if animation_data.pos_error(wilor_data.eef_pos,
+                                            animation_data.current_pos) > 0.0015 or animation_data.rotmat_error(
+                        wilor_data.eef_rotmat, animation_data.current_rotmat) > 0.05:
+                    animation_data.tgt_pos = animation_data.current_pos
+                    animation_data.tgt_rotmat = animation_data.current_rotmat
+                else:
+                    animation_data.tgt_pos = wilor_data.eef_pos
+                    animation_data.tgt_rotmat = wilor_data.eef_rotmat
 
                 manipulator_jnt_values = robot.realtime_ik(animation_data.tgt_pos, animation_data.tgt_rotmat,
                                                            seed_jnt_values=animation_data.current_manipulator_jnt_values,
@@ -180,7 +168,11 @@ def wrs(queue1: multiprocessing.Queue):
                     print("No IK solution found!")
                     animation_data.next_manipulator_jnt_values = animation_data.current_manipulator_jnt_values
                 else:
-                    animation_data.next_manipulator_jnt_values = manipulator_jnt_values
+                    if abnormal_jnts_change_detection(animation_data.current_manipulator_jnt_values,
+                                                      manipulator_jnt_values):
+                        animation_data.next_manipulator_jnt_values = animation_data.current_manipulator_jnt_values
+                    else:
+                        animation_data.next_manipulator_jnt_values = manipulator_jnt_values
 
                 animation_data.next_xhand_jnts_values = xhand_k.fingertip_ik_mapping_xhand(
                     human_hand_keypoints3d=wilor_data.keypoints_3d,
