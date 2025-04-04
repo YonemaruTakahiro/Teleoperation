@@ -27,7 +27,7 @@ links_info:
     link: 'right_hand_index_bend_joint'
     offset: 3
     joint_min:
-      - -0.087
+      - -0.04
       - 0.0
       - 0.0
 

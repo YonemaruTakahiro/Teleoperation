@@ -177,58 +177,58 @@ def wrs(queue1: multiprocessing.Queue):
     base.run()
     cv2.destroyAllWindows()
 
-# def wrs(queue1: multiprocessing.Queue):
-#
-#     # base = wd.World(cam_pos=rm.vec(0.5, 0.5, 0.7), lookat_pos=rm.vec(0, 0, .0))
-#     # xhand = xhr.XHandRight(pos=rm.vec(0, 0, 0), rotmat=rm.rotmat_from_euler(0, 0, 0))
-#     # xhexe = xhx.XHandX("/dev/ttyUSB0")
-#
-#     t_start = time.monotonic()
-#     iter_idx = 0
-#     command_latency = 0.1
-#     dt = 0.06
-#
-#     recording = False
-#     is_recorded = False
-#     last_record = False
-#     jnt_list = None
-#
-#     # onscreen_list= []
-#     value = 0
-#     try:
-#         while True:
-#             t1 = time.time()
-#
-#             # calculate timing
-#             t_cycle_end = t_start + (iter_idx + 1) * dt  ##indexが終わるまでの時間
-#             t_sample = t_cycle_end - command_latency
-#             t_command_target = t_cycle_end + dt
-#
-#             angles = queue1.get(timeout=10)
-#
-#             # precise_wait(t_sample)
-#             # if angles is not None:
-#                 # for joint, angle in angles.items():
-#                 #     print(f"{joint}: {np.degrees(angle):.2f}°")
-#                 # xhand.goto_given_conf(rm.np.array(list(angles.values())))
-#                 # for ele in onscreen_list:
-#                 #     ele.detach()
-#                 # onscreen_list.append(xhand.gen_meshmodel())
-#                 # onscreen_list[-1].attach_to(base)
-#                 # xhexe.goto_given_conf(rm.np.array(list(angles.values())))
-#             precise_wait(t_cycle_end)
-#             iter_idx += 1
-#             t2 = time.time()
-#
-#             print(f"周期:{t2 - t1}")
-#
-#     except Empty:
-#         logger.error(f"Fail to fetch image from camera in 10 secs. Please check your web camera device.")
-#         cv2.destroyAllWindows()
-#
-#
-#     finally:
-#         cv2.destroyAllWindows()
+def wrs(queue1: multiprocessing.Queue):
+
+    # base = wd.World(cam_pos=rm.vec(0.5, 0.5, 0.7), lookat_pos=rm.vec(0, 0, .0))
+    # xhand = xhr.XHandRight(pos=rm.vec(0, 0, 0), rotmat=rm.rotmat_from_euler(0, 0, 0))
+    # xhexe = xhx.XHandX("/dev/ttyUSB0")
+
+    t_start = time.monotonic()
+    iter_idx = 0
+    command_latency = 0.1
+    dt = 0.06
+
+    recording = False
+    is_recorded = False
+    last_record = False
+    jnt_list = None
+
+    # onscreen_list= []
+    value = 0
+    try:
+        while True:
+            t1 = time.time()
+
+            # calculate timing
+            t_cycle_end = t_start + (iter_idx + 1) * dt  ##indexが終わるまでの時間
+            t_sample = t_cycle_end - command_latency
+            t_command_target = t_cycle_end + dt
+
+            angles = queue1.get(timeout=10)
+
+            # precise_wait(t_sample)
+            # if angles is not None:
+                # for joint, angle in angles.items():
+                #     print(f"{joint}: {np.degrees(angle):.2f}°")
+                # xhand.goto_given_conf(rm.np.array(list(angles.values())))
+                # for ele in onscreen_list:
+                #     ele.detach()
+                # onscreen_list.append(xhand.gen_meshmodel())
+                # onscreen_list[-1].attach_to(base)
+                # xhexe.goto_given_conf(rm.np.array(list(angles.values())))
+            precise_wait(t_cycle_end)
+            iter_idx += 1
+            t2 = time.time()
+
+            print(f"周期:{t2 - t1}")
+
+    except Empty:
+        logger.error(f"Fail to fetch image from camera in 10 secs. Please check your web camera device.")
+        cv2.destroyAllWindows()
+
+
+    finally:
+        cv2.destroyAllWindows()
 
 
 

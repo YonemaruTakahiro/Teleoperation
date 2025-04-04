@@ -199,16 +199,16 @@ def wrs(queue1: multiprocessing.Queue):
             onscreen_list[-1].attach_to(base)
             meshscreen_list.append(mgm.gen_frame(pos=[0, 0, 0], rotmat=rotmat1 @ q[1] @ rotmat2))
             meshscreen_list[-1].attach_to(base)
-            # thumb_list.append(mgm.gen_frame(pos=(rotmat4 @ fk_thumb_position.T).T, rotmat=rotmat4 @ fk_thumb_rot))
-            # thumb_list[-1].attach_to(base)
-            # index_list.append(mgm.gen_frame(pos=(rotmat4 @ fk_index_position.T).T, rotmat=rotmat4 @ fk_index_rot))
-            # index_list[-1].attach_to(base)
-            # middle_list.append(mgm.gen_frame(pos=(rotmat4 @ fk_middle_position.T).T, rotmat=rotmat4 @ fk_middle_rot))
-            # middle_list[-1].attach_to(base)
-            # ring_list.append(mgm.gen_frame(pos=(rotmat4 @ fk_ring_position.T).T, rotmat=rotmat4 @ fk_ring_rot))
-            # ring_list[-1].attach_to(base)
-            # pinky_list.append(mgm.gen_frame(pos=(rotmat4 @ fk_pinky_position.T).T, rotmat=rotmat4 @ fk_pinky_rot))
-            # pinky_list[-1].attach_to(base)
+            thumb_list.append(mgm.gen_frame(pos=(rotmat4 @ fk_thumb_position.T).T, rotmat=rotmat4 @ fk_thumb_rot))
+            thumb_list[-1].attach_to(base)
+            index_list.append(mgm.gen_frame(pos=(rotmat4 @ fk_index_position.T).T, rotmat=rotmat4 @ fk_index_rot))
+            index_list[-1].attach_to(base)
+            middle_list.append(mgm.gen_frame(pos=(rotmat4 @ fk_middle_position.T).T, rotmat=rotmat4 @ fk_middle_rot))
+            middle_list[-1].attach_to(base)
+            ring_list.append(mgm.gen_frame(pos=(rotmat4 @ fk_ring_position.T).T, rotmat=rotmat4 @ fk_ring_rot))
+            ring_list[-1].attach_to(base)
+            pinky_list.append(mgm.gen_frame(pos=(rotmat4 @ fk_pinky_position.T).T, rotmat=rotmat4 @ fk_pinky_rot))
+            pinky_list[-1].attach_to(base)
 
             current_joints_list = desired_joints_angles
 
@@ -227,114 +227,114 @@ def wrs(queue1: multiprocessing.Queue):
     base.run()
     # cv2.destroyAllWindows()
 
-    # def update(iter_idx, onscreen_list, thumb_list, index_list, middle_list, ring_list, pinky_list, current_joints_list,
-    #            task):
-    #     t1 = time.time()
-    #
-    #     # calculate timing
-    #     t_cycle_end = t_start + (iter_idx + 1) * dt  ##indexが終わるまでの時間
-    #     t_sample = t_cycle_end - command_latency
-    #     t_command_target = t_cycle_end + dt
-    #
-    #     q = queue1.get(timeout=1000)
-    #
-    #     # precise_wait(t_sample)
-    #     if q is not None:
-    #
-    #         rotmat1 = np.array(
-    #             [[1, 0, 0], [0, np.cos(-np.pi / 2), -np.sin(-np.pi / 2)], [0, np.sin(-np.pi / 2), np.cos(-np.pi / 2)]])
-    #         rotmat2 = np.array(
-    #             [[np.cos(-np.pi / 2), 0, np.sin(-np.pi / 2)], [0, 1, 0], [-np.sin(-np.pi / 2), 0, np.cos(-np.pi / 2)]])
-    #         rotmat3 = np.array(
-    #             [[np.cos(-np.pi / 2), 0, -np.sin(-np.pi / 2)], [0, 1, 0], [np.sin(-np.pi / 2), 0, np.cos(-np.pi / 2)]])
-    #         rotmat4 = np.array([[1, 0, 0], [0, np.cos(np.pi), -np.sin(np.pi)], [0, np.sin(np.pi), np.cos(np.pi)]])
-    #
-    #         desired_joints_angles = xhand_k.fingertip_ik_mapping_xhand(human_hand_keypoints3d=q[0],
-    #                                                                    human_hand_orientation=q[1],
-    #                                                                    seed_angles=current_joints_list)
-    #
-    #         # xhand.goto_given_conf(desired_joints_angles)
-    #         for ele in onscreen_list:
-    #             ele.detach()
-    #         for mesh in meshscreen_list:
-    #             mesh.detach()
-    #         for tlist in thumb_list:
-    #             tlist.detach()
-    #         for ilist in index_list:
-    #             ilist.detach()
-    #         for mlist in middle_list:
-    #             mlist.detach()
-    #         for rlist in ring_list:
-    #             rlist.detach()
-    #         for plist in pinky_list:
-    #             plist.detach()
-    #
-    #         xhand_thumb_position = q[0][4] - q[0][0]
-    #         xhand_index_position = q[0][8] - q[0][0]
-    #         xhand_middle_position = q[0][12] - q[0][0]
-    #         xhand_ring_position = q[0][16] - q[0][0]
-    #         xhand_pinky_position = q[0][20] - q[0][0]
-    #
-    #         xhand_thumb_position = (q[1].T @ xhand_thumb_position.T).T + xhand_k.wrist_offset
-    #         xhand_index_position = (q[1].T @ xhand_index_position.T).T + xhand_k.wrist_offset
-    #         xhand_middle_position = (q[1].T @ xhand_middle_position.T).T + xhand_k.wrist_offset
-    #         xhand_ring_position = (q[1].T @ xhand_ring_position.T).T + xhand_k.wrist_offset
-    #         xhand_pinky_position = (q[1].T @ xhand_pinky_position.T).T + xhand_k.wrist_offset
-    #
-    #         xhand_thumb_position = (xhand_k.human_ori_to_wrs @ xhand_thumb_position.T).T
-    #         xhand_index_position = (xhand_k.human_ori_to_wrs @ xhand_index_position.T).T
-    #         xhand_middle_position = (xhand_k.human_ori_to_wrs @ xhand_middle_position.T).T
-    #         xhand_ring_position = (xhand_k.human_ori_to_wrs @ xhand_ring_position.T).T
-    #         xhand_pinky_position = (xhand_k.human_ori_to_wrs @ xhand_pinky_position.T).T
-    #
-    #         fk_thumb_position, fk_thumb_rot = xhand_k.finger_forward_kinematics('thumb', desired_joints_angles[:3])
-    #         fk_index_position, fk_index_rot = xhand_k.finger_forward_kinematics('index', desired_joints_angles[3:6])
-    #         fk_middle_position, fk_middle_rot = xhand_k.finger_forward_kinematics('middle', desired_joints_angles[6:8])
-    #         fk_ring_position, fk_ring_rot = xhand_k.finger_forward_kinematics('ring', desired_joints_angles[8:10])
-    #         fk_pinky_position, fk_pinky_rot = xhand_k.finger_forward_kinematics('pinky', desired_joints_angles[10:12])
-    #
-    #         onscreen_list.append(xhand.gen_meshmodel())
-    #         onscreen_list[-1].attach_to(base)
-    #         meshscreen_list.append(mgm.gen_frame(pos=[0, 0, 0], rotmat=rotmat1 @ q[1] @ rotmat2))
-    #         meshscreen_list[-1].attach_to(base)
-    #         # thumb_list.append(mgm.gen_frame(pos=(rotmat4 @ fk_thumb_position.T).T, rotmat=rotmat4 @ fk_thumb_rot))
-    #         # thumb_list[-1].attach_to(base)
-    #         # index_list.append(mgm.gen_frame(pos=(rotmat4 @ fk_index_position.T).T, rotmat=rotmat4 @ fk_index_rot))
-    #         # index_list[-1].attach_to(base)
-    #         # middle_list.append(mgm.gen_frame(pos=(rotmat4 @ fk_middle_position.T).T, rotmat=rotmat4 @ fk_middle_rot))
-    #         # middle_list[-1].attach_to(base)
-    #         # ring_list.append(mgm.gen_frame(pos=(rotmat4 @ fk_ring_position.T).T, rotmat=rotmat4 @ fk_ring_rot))
-    #         # ring_list[-1].attach_to(base)
-    #         # pinky_list.append(mgm.gen_frame(pos=(rotmat4 @ fk_pinky_position.T).T, rotmat=rotmat4 @ fk_pinky_rot))
-    #         # pinky_list[-1].attach_to(base)
-    #
-    #         # thumb_list.append(mgm.gen_frame(pos=(rotmat4 @ xhand_thumb_position.T).T, rotmat=rotmat4 @ fk_thumb_rot))
-    #         # thumb_list[-1].attach_to(base)
-    #         # index_list.append(mgm.gen_frame(pos=(rotmat4 @ xhand_index_position.T).T, rotmat=rotmat4 @ fk_index_rot))
-    #         # index_list[-1].attach_to(base)
-    #         # middle_list.append(mgm.gen_frame(pos=(rotmat4 @ xhand_middle_position.T).T, rotmat=rotmat4 @ fk_middle_rot))
-    #         # middle_list[-1].attach_to(base)
-    #         # ring_list.append(mgm.gen_frame(pos=(rotmat4 @ xhand_ring_position.T).T, rotmat=rotmat4 @ fk_ring_rot))
-    #         # ring_list[-1].attach_to(base)
-    #         # pinky_list.append(mgm.gen_frame(pos=(rotmat4 @ xhand_pinky_position.T).T, rotmat=rotmat4 @ fk_pinky_rot))
-    #         # pinky_list[-1].attach_to(base)
-    #
-    #         current_joints_list = desired_joints_angles
-    #
-    #         # xhexe.goto_given_conf(rm.np.array(list(angles.values())))
-    #
-    #     precise_wait(t_cycle_end)
-    #     iter_idx += 1
-    #     t2 = time.time()
-    #
-    #     # print(f"周期:{t2-t1}")
-    #     return task.cont
-    #
-    # taskMgr.doMethodLater(0.01, update, "update",
-    #                       extraArgs=[iter_idx, onscreen_list, thumb_list, index_list, middle_list, ring_list,
-    #                                  pinky_list,current_joints_list], appendTask=True)
-    # base.run()
-    # cv2.destroyAllWindows()
+    def update(iter_idx, onscreen_list, thumb_list, index_list, middle_list, ring_list, pinky_list, current_joints_list,
+               task):
+        t1 = time.time()
+
+        # calculate timing
+        t_cycle_end = t_start + (iter_idx + 1) * dt  ##indexが終わるまでの時間
+        t_sample = t_cycle_end - command_latency
+        t_command_target = t_cycle_end + dt
+
+        q = queue1.get(timeout=1000)
+
+        # precise_wait(t_sample)
+        if q is not None:
+
+            rotmat1 = np.array(
+                [[1, 0, 0], [0, np.cos(-np.pi / 2), -np.sin(-np.pi / 2)], [0, np.sin(-np.pi / 2), np.cos(-np.pi / 2)]])
+            rotmat2 = np.array(
+                [[np.cos(-np.pi / 2), 0, np.sin(-np.pi / 2)], [0, 1, 0], [-np.sin(-np.pi / 2), 0, np.cos(-np.pi / 2)]])
+            rotmat3 = np.array(
+                [[np.cos(-np.pi / 2), 0, -np.sin(-np.pi / 2)], [0, 1, 0], [np.sin(-np.pi / 2), 0, np.cos(-np.pi / 2)]])
+            rotmat4 = np.array([[1, 0, 0], [0, np.cos(np.pi), -np.sin(np.pi)], [0, np.sin(np.pi), np.cos(np.pi)]])
+
+            desired_joints_angles = xhand_k.fingertip_ik_mapping_xhand(human_hand_keypoints3d=q[0],
+                                                                       human_hand_orientation=q[1],
+                                                                       seed_angles=current_joints_list)
+
+            # xhand.goto_given_conf(desired_joints_angles)
+            for ele in onscreen_list:
+                ele.detach()
+            for mesh in meshscreen_list:
+                mesh.detach()
+            for tlist in thumb_list:
+                tlist.detach()
+            for ilist in index_list:
+                ilist.detach()
+            for mlist in middle_list:
+                mlist.detach()
+            for rlist in ring_list:
+                rlist.detach()
+            for plist in pinky_list:
+                plist.detach()
+
+            xhand_thumb_position = q[0][4] - q[0][0]
+            xhand_index_position = q[0][8] - q[0][0]
+            xhand_middle_position = q[0][12] - q[0][0]
+            xhand_ring_position = q[0][16] - q[0][0]
+            xhand_pinky_position = q[0][20] - q[0][0]
+
+            xhand_thumb_position = (q[1].T @ xhand_thumb_position.T).T + xhand_k.wrist_offset
+            xhand_index_position = (q[1].T @ xhand_index_position.T).T + xhand_k.wrist_offset
+            xhand_middle_position = (q[1].T @ xhand_middle_position.T).T + xhand_k.wrist_offset
+            xhand_ring_position = (q[1].T @ xhand_ring_position.T).T + xhand_k.wrist_offset
+            xhand_pinky_position = (q[1].T @ xhand_pinky_position.T).T + xhand_k.wrist_offset
+
+            xhand_thumb_position = (xhand_k.human_ori_to_wrs @ xhand_thumb_position.T).T
+            xhand_index_position = (xhand_k.human_ori_to_wrs @ xhand_index_position.T).T
+            xhand_middle_position = (xhand_k.human_ori_to_wrs @ xhand_middle_position.T).T
+            xhand_ring_position = (xhand_k.human_ori_to_wrs @ xhand_ring_position.T).T
+            xhand_pinky_position = (xhand_k.human_ori_to_wrs @ xhand_pinky_position.T).T
+
+            fk_thumb_position, fk_thumb_rot = xhand_k.finger_forward_kinematics('thumb', desired_joints_angles[:3])
+            fk_index_position, fk_index_rot = xhand_k.finger_forward_kinematics('index', desired_joints_angles[3:6])
+            fk_middle_position, fk_middle_rot = xhand_k.finger_forward_kinematics('middle', desired_joints_angles[6:8])
+            fk_ring_position, fk_ring_rot = xhand_k.finger_forward_kinematics('ring', desired_joints_angles[8:10])
+            fk_pinky_position, fk_pinky_rot = xhand_k.finger_forward_kinematics('pinky', desired_joints_angles[10:12])
+
+            onscreen_list.append(xhand.gen_meshmodel())
+            onscreen_list[-1].attach_to(base)
+            meshscreen_list.append(mgm.gen_frame(pos=[0, 0, 0], rotmat=rotmat1 @ q[1] @ rotmat2))
+            meshscreen_list[-1].attach_to(base)
+            # thumb_list.append(mgm.gen_frame(pos=(rotmat4 @ fk_thumb_position.T).T, rotmat=rotmat4 @ fk_thumb_rot))
+            # thumb_list[-1].attach_to(base)
+            # index_list.append(mgm.gen_frame(pos=(rotmat4 @ fk_index_position.T).T, rotmat=rotmat4 @ fk_index_rot))
+            # index_list[-1].attach_to(base)
+            # middle_list.append(mgm.gen_frame(pos=(rotmat4 @ fk_middle_position.T).T, rotmat=rotmat4 @ fk_middle_rot))
+            # middle_list[-1].attach_to(base)
+            # ring_list.append(mgm.gen_frame(pos=(rotmat4 @ fk_ring_position.T).T, rotmat=rotmat4 @ fk_ring_rot))
+            # ring_list[-1].attach_to(base)
+            # pinky_list.append(mgm.gen_frame(pos=(rotmat4 @ fk_pinky_position.T).T, rotmat=rotmat4 @ fk_pinky_rot))
+            # pinky_list[-1].attach_to(base)
+
+            thumb_list.append(mgm.gen_frame(pos=(rotmat4 @ xhand_thumb_position.T).T, rotmat=rotmat4 @ fk_thumb_rot))
+            thumb_list[-1].attach_to(base)
+            index_list.append(mgm.gen_frame(pos=(rotmat4 @ xhand_index_position.T).T, rotmat=rotmat4 @ fk_index_rot))
+            index_list[-1].attach_to(base)
+            middle_list.append(mgm.gen_frame(pos=(rotmat4 @ xhand_middle_position.T).T, rotmat=rotmat4 @ fk_middle_rot))
+            middle_list[-1].attach_to(base)
+            ring_list.append(mgm.gen_frame(pos=(rotmat4 @ xhand_ring_position.T).T, rotmat=rotmat4 @ fk_ring_rot))
+            ring_list[-1].attach_to(base)
+            pinky_list.append(mgm.gen_frame(pos=(rotmat4 @ xhand_pinky_position.T).T, rotmat=rotmat4 @ fk_pinky_rot))
+            pinky_list[-1].attach_to(base)
+
+            current_joints_list = desired_joints_angles
+
+            # xhexe.goto_given_conf(rm.np.array(list(angles.values())))
+
+        precise_wait(t_cycle_end)
+        iter_idx += 1
+        t2 = time.time()
+
+        # print(f"周期:{t2-t1}")
+        return task.cont
+
+    taskMgr.doMethodLater(0.01, update, "update",
+                          extraArgs=[iter_idx, onscreen_list, thumb_list, index_list, middle_list, ring_list,
+                                     pinky_list,current_joints_list], appendTask=True)
+    base.run()
+    cv2.destroyAllWindows()
 
 
 if __name__ == "__main__":
