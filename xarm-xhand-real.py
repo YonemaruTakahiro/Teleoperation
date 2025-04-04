@@ -1,5 +1,5 @@
 from hand_detector_multi_finger import HandDetector_multifinger
-from utils.data_class import multi_finger_animation, WiLor_Data, Data
+from utils.data_class import multi_finger_animation, WiLor_Data, Data, xhand_xarm_real_animation
 from xhand_class_ikpy import xhand_K
 from utils.teleoperation_utils import abnormal_jnts_change_detection
 import wrs.drivers.xarm.wrapper.xarm_api as xarm_api
@@ -141,24 +141,30 @@ def wrs(queue1: multiprocessing.Queue):
 
     robot.goto_given_conf(jnt_values=start_manipulator_conf)
     # robot.cc.show_cdprim()
-    start_robot_model = robot.gen_meshmodel(alpha=1, toggle_tcp_frame=True, toggle_jnt_frames=False)
-    start_mesh_model = mgm.gen_frame(pos=start_manipulator_pos, rotmat=start_manipulator_rotmat)
+    # start_robot_model = robot.gen_meshmodel(alpha=1, toggle_tcp_frame=True, toggle_jnt_frames=False)
+    # start_mesh_model = mgm.gen_frame(pos=start_manipulator_pos, rotmat=start_manipulator_rotmat)
 
-    start_mesh_model.attach_to(base)
-    start_robot_model.attach_to(base)
+    # start_mesh_model.attach_to(base)
+    # start_robot_model.attach_to(base)
 
     # robot.gen_stickmodel(toggle_tcp_frame=True, toggle_jnt_frames=True).attach_to(base)
 
-    animation_data = multi_finger_animation(start_manipulator_pos, start_manipulator_rotmat, start_manipulator_conf,
-                                            start_xhand_jnts_values, start_mesh_model, start_robot_model)
+    animation_data = xhand_xarm_real_animation(start_manipulator_pos, start_manipulator_rotmat, start_manipulator_conf,
+                                            start_xhand_jnts_values)
 
 
     wilor_data = WiLor_Data()
-
-    def update(animation_data, wilor_data, task):
-
+    iter_idx = 0
+    command_latency = 0.1
+    dt = 0.1
+    while True:
+        # calculate timing
+        t_cycle_end = time.monotonic() + dt  ##indexが終わるまでの時間
+        t_sample = t_cycle_end - command_latency
+        # t_command_target = t_cycle_end + dt
+        # t1 = time.time()
         q = queue1.get(timeout=5)
-
+        precise_wait(t_sample)
         if q is not None:
             if q[0] is not None and q[1] is not None and q[2] is not None and q[3] is not None:
                 wilor_data.eef_pos = q[0]
@@ -188,7 +194,6 @@ def wrs(queue1: multiprocessing.Queue):
                     quat=rm.quaternion_slerp(current_quaternion, wilor_quaternion, fraction=t)
                     animation_data.tgt_rotmat = rm.quaternion_to_rotmat(quat)
                 else:
-
                     animation_data.tgt_pos = wilor_data.eef_pos
                     animation_data.tgt_rotmat = wilor_data.eef_rotmat
 
@@ -208,31 +213,28 @@ def wrs(queue1: multiprocessing.Queue):
                     human_hand_orientation=wilor_data.human_hand_rotmat,
                     seed_angles=animation_data.current_xhand_jnt_values)
 
-                animation_data.mesh_model.detach()
-                animation_data.robot_model.detach()
+                # animation_data.mesh_model.detach()
+                # animation_data.robot_model.detach()
 
+                # 実機
                 robot.goto_given_conf(jnt_values=animation_data.next_manipulator_jnt_values)
+
                 robot.end_effector.goto_given_conf(animation_data.next_xhand_jnts_values)
 
                 animation_data.robot_model = robot.gen_meshmodel(toggle_tcp_frame=True)
-                animation_data.mesh_model = mgm.gen_frame(pos=wilor_data.eef_pos, rotmat=wilor_data.eef_rotmat)
+                # animation_data.mesh_model = mgm.gen_frame(pos=wilor_data.eef_pos, rotmat=wilor_data.eef_rotmat)
 
-                animation_data.mesh_model.attach_to(base)
-                animation_data.robot_model.attach_to(base)
+                # animation_data.mesh_model.attach_to(base)
+                # animation_data.robot_model.attach_to(base)
 
                 animation_data.current_pos,animation_data.current_rotmat=robot.fk(animation_data.next_manipulator_jnt_values)
                 animation_data.current_xhand_jnt_values = animation_data.next_xhand_jnts_values
                 animation_data.current_manipulator_jnt_values = animation_data.next_manipulator_jnt_values
-
+        precise_wait(t_cycle_end)
+        iter_idx += 1
         animation_data.count += 1
 
-        return task.again
 
-    taskMgr.doMethodLater(0.0, update, "update",
-                          extraArgs=[animation_data, wilor_data],
-                          appendTask=True)
-
-    base.run()
 
 
 if __name__ == "__main__":

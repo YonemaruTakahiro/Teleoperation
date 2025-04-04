@@ -77,6 +77,50 @@ class multi_finger_animation:
         else:
             return next_pos
 
+class xhand_xarm_real_animation:
+    def __init__(self, current_pos, current_rot,manipulator_jnt_values, xhand_jnt_values):
+        self.current_pos = current_pos
+        self.current_rotmat = current_rot
+        self.tgt_pos = None
+        self.tgt_rotmat = None
+        self.thumb_position = None
+        self.index_position = None
+        self.middle_position = None
+        self.ring_position = None
+        self.pinky_position = None
+        self.current_manipulator_jnt_values = manipulator_jnt_values
+        self.next_manipulator_jnt_values = None
+        self.current_xhand_jnt_values = xhand_jnt_values
+        self.next_xhand_jnt_values = None
+        self.current_jaw_width = 0
+        self.count = 0
+
+    @staticmethod
+    def rotmat_error(np_verts1, np_vert2):
+        e = np_verts1 - np_vert2
+        e = np.square(e)
+        e = np.sum(e)
+        return e / e.size
+
+    @staticmethod
+    def pos_error(np_verts1, np_vert2):
+        e = np_verts1 - np_vert2
+        e = np.square(e)
+        e = np.sum(e)
+        return e
+
+    @staticmethod
+    def modify_abnormal_pos_distance(current_pos,next_pos):
+        e = current_pos - next_pos
+        e = np.square(e)
+        e = np.sum(e)
+        e=np.sqrt(e)
+
+        if e>0.015:
+            tgt_pos=current_pos+(e/np.linalg.norm(e))*0.015
+            return tgt_pos
+        else:
+            return next_pos
 
 class animation_sim:
     def __init__(self, tgt_pos, tgt_rotmat, jnt_values, mesh_model, robot_model):
