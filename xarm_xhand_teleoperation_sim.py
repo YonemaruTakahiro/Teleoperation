@@ -1,6 +1,5 @@
 from hand_detector_multi_finger import HandDetector_multifinger
 from utils.data_class import multi_finger_animation, WiLor_Data, Data
-from wrs.neuro.ik.tester.cobotta_nn_tester import tgt_rotmat
 from xhand_class_ikpy import xhand_K
 from utils.teleoperation_utils import abnormal_jnts_change_detection
 
@@ -133,7 +132,7 @@ def wrs(queue1: multiprocessing.Queue):
     robot = x7xh.XArm7Dual(enable_cc=True)
     xhand_k = xhand_K()
 
-    start_manipulator_conf = np.radians(np.array([30, 40, 0, 90, -90, 0, -180]))
+    start_manipulator_conf = np.radians(np.array([10, 40, 30, 60, 180, 60, -70]))
     start_manipulator_pos, start_manipulator_rotmat = robot.fk(start_manipulator_conf, toggle_jacobian=False)
 
     start_xhand_jnts_values = np.array([0] * 12)
@@ -151,6 +150,7 @@ def wrs(queue1: multiprocessing.Queue):
     animation_data = multi_finger_animation(start_manipulator_pos, start_manipulator_rotmat, start_manipulator_conf,
                                             start_xhand_jnts_values, start_mesh_model, start_robot_model)
 
+
     wilor_data = WiLor_Data()
 
     def update(animation_data, wilor_data, task):
@@ -164,19 +164,29 @@ def wrs(queue1: multiprocessing.Queue):
                 wilor_data.keypoints_3d = q[2]
                 wilor_data.human_hand_rotmat = q[3]
 
-                if animation_data.pos_error(wilor_data.eef_pos,animation_data.current_pos) > 0.015 or animation_data.rotmat_error(wilor_data.eef_rotmat, animation_data.current_rotmat) > 0.05:
+
+                if wilor_data.eef_pos[2]<0.15:
+                    wilor_data.eef_pos[2] = 0.15
+
+                if animation_data.pos_error(wilor_data.eef_pos,animation_data.current_pos) > 0.05:
                     #position
+                    max_average_velocity=0.5 #m/s
                     distance=np.sqrt(np.sum(np.square(wilor_data.eef_pos-animation_data.current_pos)))
-                    num_way_points=distance/max_average_velocity
+                    print(f"distance:{distance}")
+                    num_way_points=int(distance/(max_average_velocity*0.1))
                     way_points=rm.np.linspace(animation_data.current_pos,wilor_data.eef_pos,num_way_points)
+                    print(f"animation_data.current_pos:{animation_data.current_pos}")
+                    print(f"tgt_pos:{wilor_data.eef_pos}")
                     animation_data.tgt_pos=way_points[1]
+                    print(f"animation_data.tgt_pos:{animation_data.tgt_pos}")
                     #orientation
                     t=rm.np.linspace(0, 1, num_way_points)[1]
-                    current_quaternion=rm.rotmat_to_quaternion(wilor_data.eef_rotmat)
-                    wilor_quaternion=rm.rotmat_to_quaternion(animation_data.current_rotmat)
+                    current_quaternion=rm.rotmat_to_quaternion(animation_data.current_rotmat)
+                    wilor_quaternion=rm.rotmat_to_quaternion(wilor_data.eef_rotmat)
                     quat=rm.quaternion_slerp(current_quaternion, wilor_quaternion, fraction=t)
                     animation_data.tgt_rotmat = rm.quaternion_to_rotmat(quat)
                 else:
+
                     animation_data.tgt_pos = wilor_data.eef_pos
                     animation_data.tgt_rotmat = wilor_data.eef_rotmat
 
@@ -185,7 +195,6 @@ def wrs(queue1: multiprocessing.Queue):
                 manipulator_jnt_values = robot.realtime_ik(animation_data.tgt_pos, animation_data.tgt_rotmat,
                                                            seed_jnt_values=animation_data.current_manipulator_jnt_values,
                                                            toggle_dbg=False)
-
                 if manipulator_jnt_values is None:
                     print("No IK solution found!")
                     animation_data.next_manipulator_jnt_values = animation_data.current_manipulator_jnt_values
@@ -204,11 +213,12 @@ def wrs(queue1: multiprocessing.Queue):
                 robot.end_effector.goto_given_conf(animation_data.next_xhand_jnts_values)
 
                 animation_data.robot_model = robot.gen_meshmodel(toggle_tcp_frame=True)
-                animation_data.mesh_model = mgm.gen_frame(pos=animation_data.tgt_pos, rotmat=animation_data.tgt_rotmat)
+                animation_data.mesh_model = mgm.gen_frame(pos=wilor_data.eef_pos, rotmat=wilor_data.eef_rotmat)
 
                 animation_data.mesh_model.attach_to(base)
                 animation_data.robot_model.attach_to(base)
 
+                animation_data.current_pos,animation_data.current_rotmat=robot.fk(animation_data.next_manipulator_jnt_values)
                 animation_data.current_xhand_jnt_values = animation_data.next_xhand_jnts_values
                 animation_data.current_manipulator_jnt_values = animation_data.next_manipulator_jnt_values
 

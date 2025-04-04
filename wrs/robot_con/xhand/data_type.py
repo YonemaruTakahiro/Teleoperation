@@ -64,7 +64,7 @@ class FingerState:
         unpacked = struct.unpack(FINGER_STATE_FORMAT, data)
         return cls(*unpacked)
 
-#    one
+# for one finger
 class SensorData:
     def __init__(self, fx, fy, fz, force_data, temp_data, temp_total):
         self.fx = fx

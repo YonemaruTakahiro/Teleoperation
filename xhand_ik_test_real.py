@@ -173,7 +173,16 @@ def wrs(queue1: multiprocessing.Queue):
                                                                        seed_angles=current_joints_list)
 
             xhand.goto_given_conf(desired_joints_angles)
-            xhexe.goto_given_conf(desired_joints_angles)
+            received_data=xhexe.goto_given_conf_and_get_hand_state(desired_joints_angles)
+
+            max_sensor_value=min([min(i) for i in received_data['sensor_data'][1].force_data])
+            print(f"max:{max_sensor_value }")
+
+
+
+
+            print(f"received_data:{received_data['finger_states'][4].position}")
+
             for ele in onscreen_list:
                 ele.detach()
             for mesh in meshscreen_list:

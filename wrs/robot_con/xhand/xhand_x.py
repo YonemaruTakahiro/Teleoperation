@@ -109,13 +109,12 @@ class XHandX:
             return None
         # Read header (7 bytes: frame header, IDs, command, length)
         response_header = self.ser.read(7)
-        print(f"Received: {response_header.hex()}")
         if len(response_header) < 7:
             print("Error: Incomplete response header")
             return None
         # Extract data length
         frame_header, src_id, dest_id, command, data_length = struct.unpack("<HBBBH", response_header)
-        if frame_header != 0x55AA:
+        if frame_header != 43605:
             print("Wrong frame header")
             return None
         data_length = int(data_length)
@@ -124,7 +123,7 @@ class XHandX:
         if len(response_data) < data_length + 2:
             print("Error: Incomplete response data")
             return None
-        data = response_data[7:-2]  # Actual data
+        data = response_data[:-2]  # Actual data
         received_crc = response_data[-2:]
         # Validate CRC
         computed_crc = self.calculate_crc(response_header + data)
@@ -190,10 +189,13 @@ class XHandX:
         # **Convert to bytes and send command**
         return self.send_command_and_get_hand_state(0x02, finger_package.to_bytes())  # 0x02 = Move command
 
+
 # **Example Usage**
 if __name__ == "__main__":
-    hand = XHandX(port="COM3", baudrate=3000000)
+    hand = XHandX(port="/dev/ttyUSB0", baudrate=3000000)
     hand.get_version()
-    hand.goto_given_conf([0.5]*12)
+    hand_state=hand.goto_given_conf_and_get_hand_state([0.5]*12)
+    print(f"hand_state:{hand_state['sensor_data'][1].force_data}")
+
     # Close connection
     hand.close()

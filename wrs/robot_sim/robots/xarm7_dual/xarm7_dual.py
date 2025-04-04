@@ -1,4 +1,5 @@
 import os
+import numpy as np
 import wrs.basis.robot_math as rm
 import wrs.modeling.collision_model as mcm
 import wrs.robot_sim._kinematics.jlchain as rkjlc
@@ -35,6 +36,13 @@ class XArm7Dual(dari.DualArmRobotInterface):
         self._rgt_arm = xa7xh.XArm7XHR(pos=self._body.gl_flange_pose_list[1][0],
                                        rotmat=self._body.gl_flange_pose_list[1][1], enable_cc=False)
         # self._rgt_arm.home_conf = rm.vec(rm.pi * 2 / 3, -rm.pi / 3, -rm.pi * 2 / 3, 0, rm.pi / 2, 0, 0)
+        # self._rgt_arm.manipulator.jnts[0].motion_range = np.array([np.pi / 18, np.pi * 11 / 36])
+        # self._rgt_arm.manipulator.jnts[1].motion_range = np.array([-np.pi, 0])
+        # self._rgt_arm.manipulator.jnts[2].motion_range = np.array([-np.pi/9, np.pi/9])
+        # self._rgt_arm.manipulator.jnts[3].motion_range = np.array([np.pi / 18, np.pi / 2])
+        # # self._rgt_arm.manipulator.jnts[4].motion_range = np.array([-np.pi, np.pi])
+        # self._rgt_arm.manipulator.jnts[5].motion_range = np.array([-np.pi/2, np.pi/6])
+        # # self._rgt_arm.manipulator.jnts[5].motion_range = np.array([-np.pi, np.pi])
         self._rgt_arm.manipulator.jlc.finalize(identifier_str=self._rgt_arm.name + "_dual_rgt")
         if self.cc is not None:
             self.setup_cc()
@@ -165,16 +173,16 @@ if __name__ == '__main__':
     robot.gen_meshmodel(alpha=1, toggle_cdprim=True).attach_to(base)
     # robot.gen_stickmodel().attach_to(base)
     # robot.delegator.manipulator.jlc._ik_solver.test_success_rate()
-    base.run()
+    # base.run()
 
     count = 0
     # ik test
     for i in tqdm(range(100)):
-        rand_conf = robot.rand_conf()
+        # rand_conf = robot.rand_conf()
         # print(rand_conf, robot.delegator.manipulator.jnt_ranges)
-        tgt_pos, tgt_rotmat = robot.fk(jnt_values=rand_conf)
-        # tgt_pos = rm.vec(.8, -.1, .9)
-        # tgt_rotmat = rm.rotmat_from_axangle([0, 1, 0], rm.pi)
+        # tgt_pos, tgt_rotmat = robot.fk(jnt_values=rand_conf)
+        tgt_pos = rm.vec(.4+0.1*i, -.3, .2)
+        tgt_rotmat = rm.rotmat_from_axangle([0, 0, 1], rm.pi)
         mcm.mgm.gen_frame(pos=tgt_pos, rotmat=tgt_rotmat, ax_length=.3).attach_to(base)
 
         tic = time.time()
