@@ -14,6 +14,7 @@ from queue import Empty
 from loguru import logger
 from wrs import wd, rm, ur3d, rrtc, mgm, mcm
 from wrs.robot_sim.robots.xarm7_dual import xarm7_dual as x7xh
+from wrs.robot_con.xhand import xhand_x as xhx
 
 from ultralytics import YOLO
 from utils.precise_sleep import precise_wait
@@ -22,9 +23,20 @@ from wilor.utils import recursive_to
 from wilor.datasets.vitdet_dataset import ViTDetDataset, DEFAULT_MEAN, DEFAULT_STD
 from wilor.utils.renderer import Renderer, cam_crop_to_full
 import struct
+from enum import IntEnum
 
 WIDTH = 1280
 HEIGHT = 720
+
+class Preset(IntEnum):
+    Custom = 0
+    Default = 1
+    Hand = 2
+    HighAccuracy = 3
+    HighDensity = 4
+    MediumDensity = 5
+
+
 
 
 def wilor_to_xhand(queue1: multiprocessing.Queue):
@@ -125,21 +137,35 @@ def wilor_to_xhand(queue1: multiprocessing.Queue):
         pipeline_hand.stop()
         cv2.destroyAllWindows()
 
-
+#wrsの座標系とxarmの座標系がずれていることに注意
 def wrs(queue1: multiprocessing.Queue):
-    base = wd.World(cam_pos=[1.7, 1.7, 1.7], lookat_pos=[0, 0, .3])
-    mgm.gen_frame().attach_to(base)
+    # base = wd.World(cam_pos=[1.7, 1.7, 1.7], lookat_pos=[0, 0, .3])
+    # mgm.gen_frame().attach_to(base)
 
     robot = x7xh.XArm7Dual(enable_cc=True)
-    robot_x=xarm_api.XArmAPI()
+    robot_x=xarm_api.XArmAPI(port="192.168.1.205")
+    robot_x.clean_error()
+    robot_x.clean_error()
+    robot_x.motion_enable()
+    robot_x.set_mode(1)
+    robot_x.set_state(state=0)
+    robot_x.reset(wait=True)
     xhand_k = xhand_K()
+    # xhexe = xhx.XHandX("/dev/ttyUSB0")
 
-    start_manipulator_conf = np.radians(np.array([10, 40, 30, 60, 180, 60, -70]))
-    start_manipulator_pos, start_manipulator_rotmat = robot.fk(start_manipulator_conf, toggle_jacobian=False)
+    start_manipulator_conf =robot_x.get_servo_angle()
+    if start_manipulator_conf[0]==0:
+        print(f"start_manipulator_conf:{start_manipulator_conf[1]}")
+        start_manipulator_pos, start_manipulator_rotmat = robot.fk(np.array(start_manipulator_conf[1]), toggle_jacobian=False)
+    else:
+        raise NotImplementedError
+
+
+    print(f"start_manipulator_pos:{robot_x.get_position()}   {start_manipulator_pos}")
 
     start_xhand_jnts_values = np.array([0] * 12)
 
-    robot.goto_given_conf(jnt_values=start_manipulator_conf)
+    # robot.goto_given_conf(jnt_values=start_manipulator_conf)
     # robot.cc.show_cdprim()
     # start_robot_model = robot.gen_meshmodel(alpha=1, toggle_tcp_frame=True, toggle_jnt_frames=False)
     # start_mesh_model = mgm.gen_frame(pos=start_manipulator_pos, rotmat=start_manipulator_rotmat)
@@ -149,8 +175,7 @@ def wrs(queue1: multiprocessing.Queue):
 
     # robot.gen_stickmodel(toggle_tcp_frame=True, toggle_jnt_frames=True).attach_to(base)
 
-    animation_data = xhand_xarm_real_animation(start_manipulator_pos, start_manipulator_rotmat, start_manipulator_conf,
-                                            start_xhand_jnts_values)
+    animation_data = xhand_xarm_real_animation(start_manipulator_pos, start_manipulator_rotmat, np.radians(start_manipulator_conf[1]),start_xhand_jnts_values)
 
 
     wilor_data = WiLor_Data()
@@ -162,9 +187,9 @@ def wrs(queue1: multiprocessing.Queue):
         t_cycle_end = time.monotonic() + dt  ##indexが終わるまでの時間
         t_sample = t_cycle_end - command_latency
         # t_command_target = t_cycle_end + dt
-        # t1 = time.time()
-        q = queue1.get(timeout=5)
-        precise_wait(t_sample)
+        t1 = time.time()
+        q = queue1.get(timeout=10)
+        # precise_wait(t_sample)
         if q is not None:
             if q[0] is not None and q[1] is not None and q[2] is not None and q[3] is not None:
                 wilor_data.eef_pos = q[0]
@@ -173,30 +198,25 @@ def wrs(queue1: multiprocessing.Queue):
                 wilor_data.human_hand_rotmat = q[3]
 
 
-                if wilor_data.eef_pos[2]<0.15:
-                    wilor_data.eef_pos[2] = 0.15
+                if wilor_data.eef_pos[2]<0.20:
+                    wilor_data.eef_pos[2] = 0.20
 
-                if animation_data.pos_error(wilor_data.eef_pos,animation_data.current_pos) > 0.05:
-                    #position
-                    max_average_velocity=0.5 #m/s
-                    distance=np.sqrt(np.sum(np.square(wilor_data.eef_pos-animation_data.current_pos)))
-                    print(f"distance:{distance}")
-                    num_way_points=int(distance/(max_average_velocity*0.1))
-                    way_points=rm.np.linspace(animation_data.current_pos,wilor_data.eef_pos,num_way_points)
-                    print(f"animation_data.current_pos:{animation_data.current_pos}")
-                    print(f"tgt_pos:{wilor_data.eef_pos}")
-                    animation_data.tgt_pos=way_points[1]
-                    print(f"animation_data.tgt_pos:{animation_data.tgt_pos}")
-                    #orientation
-                    t=rm.np.linspace(0, 1, num_way_points)[1]
-                    current_quaternion=rm.rotmat_to_quaternion(animation_data.current_rotmat)
-                    wilor_quaternion=rm.rotmat_to_quaternion(wilor_data.eef_rotmat)
-                    quat=rm.quaternion_slerp(current_quaternion, wilor_quaternion, fraction=t)
-                    animation_data.tgt_rotmat = rm.quaternion_to_rotmat(quat)
-                else:
-                    animation_data.tgt_pos = wilor_data.eef_pos
-                    animation_data.tgt_rotmat = wilor_data.eef_rotmat
-
+                # if animation_data.pos_error(wilor_data.eef_pos,animation_data.current_pos) > 0.05:
+                #     #position
+                #     max_average_velocity=0.5 #m/s
+                #     distance=np.sqrt(np.sum(np.square(wilor_data.eef_pos-animation_data.current_pos)))
+                #     num_way_points=int(distance/(max_average_velocity*0.1))
+                #     way_points=rm.np.linspace(animation_data.current_pos,wilor_data.eef_pos,num_way_points)
+                #     animation_data.tgt_pos=way_points[1]
+                #     #orientation
+                #     t=rm.np.linspace(0, 1, num_way_points)[1]
+                #     current_quaternion=rm.rotmat_to_quaternion(animation_data.current_rotmat)
+                #     wilor_quaternion=rm.rotmat_to_quaternion(wilor_data.eef_rotmat)
+                #     quat=rm.quaternion_slerp(current_quaternion, wilor_quaternion, fraction=t)
+                #     animation_data.tgt_rotmat = rm.quaternion_to_rotmat(quat)
+                # else:
+                animation_data.tgt_pos = wilor_data.eef_pos
+                animation_data.tgt_rotmat = wilor_data.eef_rotmat
 
 
                 manipulator_jnt_values = robot.realtime_ik(animation_data.tgt_pos, animation_data.tgt_rotmat,
@@ -217,11 +237,13 @@ def wrs(queue1: multiprocessing.Queue):
                 # animation_data.robot_model.detach()
 
                 # 実機
-                robot.goto_given_conf(jnt_values=animation_data.next_manipulator_jnt_values)
+                # robot.goto_given_conf(jnt_values=animation_data.next_manipulator_jnt_values)
+                # robot.end_effector.goto_given_conf(animation_data.next_xhand_jnts_values)
 
-                robot.end_effector.goto_given_conf(animation_data.next_xhand_jnts_values)
+                robot_x.set_servo_angle_j(angles=animation_data.next_manipulator_jnt_values,mvtime=100,speed=np.radians(10),acc=np.radians(20),is_radian=True,wait=True)
+                # received_data = xhexe.goto_given_conf_and_get_hand_state(animation_data.next_xhand_jnts_values)
 
-                animation_data.robot_model = robot.gen_meshmodel(toggle_tcp_frame=True)
+                # animation_data.robot_model = robot.gen_meshmodel(toggle_tcp_frame=True)
                 # animation_data.mesh_model = mgm.gen_frame(pos=wilor_data.eef_pos, rotmat=wilor_data.eef_rotmat)
 
                 # animation_data.mesh_model.attach_to(base)
@@ -230,9 +252,12 @@ def wrs(queue1: multiprocessing.Queue):
                 animation_data.current_pos,animation_data.current_rotmat=robot.fk(animation_data.next_manipulator_jnt_values)
                 animation_data.current_xhand_jnt_values = animation_data.next_xhand_jnts_values
                 animation_data.current_manipulator_jnt_values = animation_data.next_manipulator_jnt_values
+
         precise_wait(t_cycle_end)
         iter_idx += 1
         animation_data.count += 1
+        t2=time.time()
+        print(f"周期：:{t2-t1}")
 
 
 

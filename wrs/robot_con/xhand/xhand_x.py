@@ -66,7 +66,7 @@ class XHandX:
         crc = self.calculate_crc(frame_header + src_id + dest_id + command + data_length + data)
         packet = frame_header + src_id + dest_id + command + data_length + data + crc
         # Send command
-        print(f"Sending: {packet.hex()}")
+        # print(f"Sending: {packet.hex()}")
         self.ser.write(packet)
         self.ser.flush()
         time.sleep(0.002)
@@ -130,7 +130,7 @@ class XHandX:
         if received_crc != computed_crc:
             print("Error: CRC mismatch")
             return None
-        print(f"Received: {response_header.hex()} {response_data.hex()}")
+        # print(f"Received: {response_header.hex()} {response_data.hex()}")
         # finger states
         finger_states = []
         offset = 0

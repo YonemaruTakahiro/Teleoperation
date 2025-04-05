@@ -133,6 +133,7 @@ def wrs(queue1: multiprocessing.Queue):
     xhand_k = xhand_K()
 
     start_manipulator_conf = np.radians(np.array([10, 40, 30, 60, 180, 60, -70]))
+    print(f"start_manipulator:{start_manipulator_conf}")
     start_manipulator_pos, start_manipulator_rotmat = robot.fk(start_manipulator_conf, toggle_jacobian=False)
 
     start_xhand_jnts_values = np.array([0] * 12)
@@ -168,33 +169,34 @@ def wrs(queue1: multiprocessing.Queue):
                 if wilor_data.eef_pos[2]<0.15:
                     wilor_data.eef_pos[2] = 0.15
 
-                if animation_data.pos_error(wilor_data.eef_pos,animation_data.current_pos) > 0.05:
-                    #position
-                    max_average_velocity=0.5 #m/s
-                    distance=np.sqrt(np.sum(np.square(wilor_data.eef_pos-animation_data.current_pos)))
-                    print(f"distance:{distance}")
-                    num_way_points=int(distance/(max_average_velocity*0.1))
-                    way_points=rm.np.linspace(animation_data.current_pos,wilor_data.eef_pos,num_way_points)
-                    print(f"animation_data.current_pos:{animation_data.current_pos}")
-                    print(f"tgt_pos:{wilor_data.eef_pos}")
-                    animation_data.tgt_pos=way_points[1]
-                    print(f"animation_data.tgt_pos:{animation_data.tgt_pos}")
-                    #orientation
-                    t=rm.np.linspace(0, 1, num_way_points)[1]
-                    current_quaternion=rm.rotmat_to_quaternion(animation_data.current_rotmat)
-                    wilor_quaternion=rm.rotmat_to_quaternion(wilor_data.eef_rotmat)
-                    quat=rm.quaternion_slerp(current_quaternion, wilor_quaternion, fraction=t)
-                    animation_data.tgt_rotmat = rm.quaternion_to_rotmat(quat)
-                else:
+                # if animation_data.pos_error(wilor_data.eef_pos,animation_data.current_pos) > 0.05:
+                #     #position
+                #     max_average_velocity=0.5 #m/s
+                #     distance=np.sqrt(np.sum(np.square(wilor_data.eef_pos-animation_data.current_pos)))
+                #     print(f"distance:{distance}")
+                #     num_way_points=int(distance/(max_average_velocity*0.1))
+                #     way_points=rm.np.linspace(animation_data.current_pos,wilor_data.eef_pos,num_way_points)
+                #     print(f"animation_data.current_pos:{animation_data.current_pos}")
+                #     print(f"tgt_pos:{wilor_data.eef_pos}")
+                #     animation_data.tgt_pos=way_points[1]
+                #     print(f"animation_data.tgt_pos:{animation_data.tgt_pos}")
+                #     #orientation
+                #     t=rm.np.linspace(0, 1, num_way_points)[1]
+                #     current_quaternion=rm.rotmat_to_quaternion(animation_data.current_rotmat)
+                #     wilor_quaternion=rm.rotmat_to_quaternion(wilor_data.eef_rotmat)
+                #     quat=rm.quaternion_slerp(current_quaternion, wilor_quaternion, fraction=t)
+                #     animation_data.tgt_rotmat = rm.quaternion_to_rotmat(quat)
+                # else:
 
-                    animation_data.tgt_pos = wilor_data.eef_pos
-                    animation_data.tgt_rotmat = wilor_data.eef_rotmat
+                animation_data.tgt_pos = wilor_data.eef_pos
+                animation_data.tgt_rotmat = wilor_data.eef_rotmat
 
 
 
-                manipulator_jnt_values = robot.realtime_ik(animation_data.tgt_pos, animation_data.tgt_rotmat,
+                manipulator_jnt_values = robot.ik(animation_data.tgt_pos, animation_data.tgt_rotmat,
                                                            seed_jnt_values=animation_data.current_manipulator_jnt_values,
                                                            toggle_dbg=False)
+                print(f"manipulator_jnt_value:{manipulator_jnt_values}")
                 if manipulator_jnt_values is None:
                     print("No IK solution found!")
                     animation_data.next_manipulator_jnt_values = animation_data.current_manipulator_jnt_values
