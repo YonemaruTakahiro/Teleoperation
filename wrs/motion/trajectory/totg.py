@@ -11,10 +11,11 @@ def split_path_1d(path_1d):
     :return:
     """
     zero_crossings = []
-    distances = rm.np.diff(path_1d)
+    distances = rm.np.diff(path_1d)#一回微分
     for i in range(len(distances) - 1):
         if rm.np.abs(distances[i]) < 1e-12:
             for j in range(i + 1, len(distances)):
+                ##符号のプラスマイナスが変化しているIDをリストに追加
                 if rm.np.abs(distances[j]) > 1e-12 and rm.np.sign(distances[j]) != rm.np.sign(distances[i - 1]):
                     zero_crossings.append(j + 1)
                     break
@@ -25,7 +26,7 @@ def split_path_1d(path_1d):
             else:
                 print(i)
                 i = j + 1
-        elif rm.np.sign(distances[i]) != rm.np.sign(distances[i + 1]) and rm.np.abs(distances[i + 1]) > 1e-12:
+        elif rm.np.sign(distances[i]) != rm.np.sign(distances[i + 1]) and rm.np.abs(distances[i + 1]) > 1e-12:#
             zero_crossings.append(i + 2)
     if len(zero_crossings) == 0:
         return [path_1d]
@@ -56,7 +57,7 @@ def proc_segs(path_1d_segs, max_vel, max_acc):
     velocities = []
     for id, path_1d in enumerate(path_1d_segs):
         if id > 0:
-            path_1d = rm.np.insert(path_1d, 0, path_1d_segs[id - 1][-1])
+            path_1d = rm.np.insert(path_1d, 0, path_1d_segs[id - 1][-1])#セグメントの終点に次のセグメントの始点を追加
         v_fwd = forward_1d(path_1d, max_vel, max_acc)
         v_bwd = backward_1d(path_1d, v_fwd, max_acc)
         if rm.np.diff(path_1d)[0] < 0:
@@ -66,8 +67,10 @@ def proc_segs(path_1d_segs, max_vel, max_acc):
 
 
 def time_optimal_trajectory_generation(path, max_vels=None, max_accs=None, ctrl_freq=.005):
+    #ctrl_freqはロボットのコントロール周期
     path = rm.np.asarray(path)
     n_waypoints, n_jnts = path.shape
+    #速度の指定
     if max_vels is None:
         max_vels = rm.np.asarray([rm.pi * 2 / 3] * n_jnts)
     if max_accs is None:
@@ -75,32 +78,23 @@ def time_optimal_trajectory_generation(path, max_vels=None, max_accs=None, ctrl_
     velocities = rm.np.zeros((n_waypoints, n_jnts))
     for id_jnt in range(n_jnts):
         path_1d = path[:, id_jnt]
-        path_1d_segs = split_path_1d(path_1d)
+        path_1d_segs = split_path_1d(path_1d)#それぞれのsegmentが単調減少と単調増加しているように分割されている
         vel_1d_segs = proc_segs(path_1d_segs, max_vels[id_jnt], max_accs[id_jnt])
         vel_1d_merged = rm.np.concatenate([v[:-1] for v in vel_1d_segs[:-1]] + [vel_1d_segs[-1]])
         velocities[:, id_jnt] = vel_1d_merged
     distances = rm.np.abs(rm.np.diff(path, axis=0))
     avg_velocities = rm.np.abs((velocities[:-1] + velocities[1:]) / 2)
     avg_velocities = rm.np.where(avg_velocities == 0, 10e6, avg_velocities)  # use a large value to ignore 0 speeds
-    time_intervals = rm.np.max(distances / avg_velocities, axis=1)
+    time_intervals = rm.np.max(distances / avg_velocities, axis=1)#関節角の差を平均速度で割ってかかった時間を計算
     time = rm.np.zeros(len(path))
     time[1:] = rm.np.cumsum(time_intervals)
     n_interp_conf = int(time[-1] / ctrl_freq) + 1
     interp_time = rm.np.linspace(0, time[-1], n_interp_conf)
-    # interp_confs= rm.np.zeros((len(interp_time), path.shape[1]))
-    # interp_spds = rm.np.zeros((len(interp_time), path.shape[1]))
-    # interp_accs = rm.np.zeros((len(interp_time), path.shape[1]))
-    # for j in range(path.shape[1]):
-    #     cs_confs = CubicSpline(time, path[:, j], bc_type=((1, 0), (1, 0)))
-    #     interp_confs[:, j] = cs_confs(interp_time)
-    #     cs_velocities = cs_confs.derivative()
-    #     interp_spds[:, j] = cs_velocities(interp_time)
-    #     cs_accs = cs_velocities.derivative()
-    #     interp_accs[:, j] = cs_accs(interp_time)
+
     interp_confs = rm.np.zeros((len(interp_time), path.shape[1]))
     interp_spds = rm.np.zeros((len(interp_time), path.shape[1]))
     for j in range(path.shape[1]):
-        interp_confs[:, j] = rm.np.interp(interp_time, time, path[:, j])
+        interp_confs[:, j] = rm.np.interp(interp_time, time, path[:, j])#interp_timeでpath[:, j]を補完
         interp_spds[:, j] = rm.np.interp(interp_time, time, velocities[:, j])
     tmp_spds = rm.np.append(interp_spds, rm.np.zeros((1, n_jnts)), axis=0)
     interp_accs = rm.np.diff(tmp_spds, axis=0) / ctrl_freq

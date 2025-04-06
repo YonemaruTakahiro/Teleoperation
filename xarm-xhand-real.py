@@ -2,8 +2,8 @@ from hand_detector_multi_finger import HandDetector_multifinger
 from utils.data_class import multi_finger_animation, WiLor_Data, Data, xhand_xarm_real_animation
 from xhand_class_ikpy import xhand_K
 from utils.teleoperation_utils import abnormal_jnts_change_detection
-import wrs.drivers.xarm.wrapper.xarm_api as xarm_api
-
+# import wrs.drivers.xarm.wrapper.xarm_api as xarm_api
+import xarm_realtime_con as xrc
 import pyrealsense2 as rs
 import multiprocessing
 import torch
@@ -143,25 +143,16 @@ def wrs(queue1: multiprocessing.Queue):
     # mgm.gen_frame().attach_to(base)
 
     robot = x7xh.XArm7Dual(enable_cc=True)
-    robot_x=xarm_api.XArmAPI(port="192.168.1.205")
-    robot_x.clean_error()
-    robot_x.clean_error()
-    robot_x.motion_enable()
-    robot_x.set_mode(1)
-    robot_x.set_state(state=0)
-    robot_x.reset(wait=True)
+    robotx=xrc.XArmX(ip="192.168.1.205")
     xhand_k = xhand_K()
     # xhexe = xhx.XHandX("/dev/ttyUSB0")
 
-    start_manipulator_conf =robot_x.get_servo_angle()
+    start_manipulator_conf =robotx.arm_get_jnt_values()
     if start_manipulator_conf[0]==0:
-        print(f"start_manipulator_conf:{start_manipulator_conf[1]}")
-        start_manipulator_pos, start_manipulator_rotmat = robot.fk(np.array(start_manipulator_conf[1]), toggle_jacobian=False)
+        print(f"start_manipulator_conf:{start_manipulator_conf}")
+        start_manipulator_pos, start_manipulator_rotmat = robot.fk(np.array(start_manipulator_conf), toggle_jacobian=False)
     else:
         raise NotImplementedError
-
-
-    print(f"start_manipulator_pos:{robot_x.get_position()}   {start_manipulator_pos}")
 
     start_xhand_jnts_values = np.array([0] * 12)
 
@@ -175,7 +166,7 @@ def wrs(queue1: multiprocessing.Queue):
 
     # robot.gen_stickmodel(toggle_tcp_frame=True, toggle_jnt_frames=True).attach_to(base)
 
-    animation_data = xhand_xarm_real_animation(start_manipulator_pos, start_manipulator_rotmat, np.radians(start_manipulator_conf[1]),start_xhand_jnts_values)
+    animation_data = xhand_xarm_real_animation(start_manipulator_pos, start_manipulator_rotmat, np.radians(start_manipulator_conf),start_xhand_jnts_values)
 
 
     wilor_data = WiLor_Data()
@@ -201,20 +192,6 @@ def wrs(queue1: multiprocessing.Queue):
                 if wilor_data.eef_pos[2]<0.20:
                     wilor_data.eef_pos[2] = 0.20
 
-                # if animation_data.pos_error(wilor_data.eef_pos,animation_data.current_pos) > 0.05:
-                #     #position
-                #     max_average_velocity=0.5 #m/s
-                #     distance=np.sqrt(np.sum(np.square(wilor_data.eef_pos-animation_data.current_pos)))
-                #     num_way_points=int(distance/(max_average_velocity*0.1))
-                #     way_points=rm.np.linspace(animation_data.current_pos,wilor_data.eef_pos,num_way_points)
-                #     animation_data.tgt_pos=way_points[1]
-                #     #orientation
-                #     t=rm.np.linspace(0, 1, num_way_points)[1]
-                #     current_quaternion=rm.rotmat_to_quaternion(animation_data.current_rotmat)
-                #     wilor_quaternion=rm.rotmat_to_quaternion(wilor_data.eef_rotmat)
-                #     quat=rm.quaternion_slerp(current_quaternion, wilor_quaternion, fraction=t)
-                #     animation_data.tgt_rotmat = rm.quaternion_to_rotmat(quat)
-                # else:
                 animation_data.tgt_pos = wilor_data.eef_pos
                 animation_data.tgt_rotmat = wilor_data.eef_rotmat
 
@@ -233,21 +210,10 @@ def wrs(queue1: multiprocessing.Queue):
                     human_hand_orientation=wilor_data.human_hand_rotmat,
                     seed_angles=animation_data.current_xhand_jnt_values)
 
-                # animation_data.mesh_model.detach()
-                # animation_data.robot_model.detach()
 
-                # 実機
-                # robot.goto_given_conf(jnt_values=animation_data.next_manipulator_jnt_values)
-                # robot.end_effector.goto_given_conf(animation_data.next_xhand_jnts_values)
-
-                robot_x.set_servo_angle_j(angles=animation_data.next_manipulator_jnt_values,mvtime=100,speed=np.radians(10),acc=np.radians(20),is_radian=True,wait=True)
+                robotx.arm_move_jspace_path(path=[animation_data.current_manipulator_jnt_values,animation_data.next_manipulator_jnt_values])#並列処理をしたほうがいいかも
+                # robotx.set_servo_angle_j(angles=animation_data.next_manipulator_jnt_values,mvtime=100,speed=np.radians(10),acc=np.radians(20),is_radian=True,wait=True)
                 # received_data = xhexe.goto_given_conf_and_get_hand_state(animation_data.next_xhand_jnts_values)
-
-                # animation_data.robot_model = robot.gen_meshmodel(toggle_tcp_frame=True)
-                # animation_data.mesh_model = mgm.gen_frame(pos=wilor_data.eef_pos, rotmat=wilor_data.eef_rotmat)
-
-                # animation_data.mesh_model.attach_to(base)
-                # animation_data.robot_model.attach_to(base)
 
                 animation_data.current_pos,animation_data.current_rotmat=robot.fk(animation_data.next_manipulator_jnt_values)
                 animation_data.current_xhand_jnt_values = animation_data.next_xhand_jnts_values
