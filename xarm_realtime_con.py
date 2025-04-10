@@ -1,11 +1,12 @@
 import math
+from wrs import wd, rm, ur3d, rrtc, mgm, mcm
 import time
 import numpy as np
 from wrs.drivers.xarm.wrapper import xarm_api as arm
 import wrs.motion.trajectory.totg as pwp
 
 
-class XArmX(object):
+class xhand_XArmX(object):
 
     def __init__(self, ip="10.2.0.203"):
         """
@@ -21,13 +22,23 @@ class XArmX(object):
         self._arm_x.clean_error()
         self._arm_x.clean_error()
         self._arm_x.motion_enable()
-        self._arm_x.set_mode(1)  # servo motion mode
+        self._arm_x.set_mode(0)  # servo motion mode
         self._arm_x.set_state(state=0)
-        self._arm_x.reset(wait=True)
+        # self._arm_x.set_tcp_max_velocity(200, 500)
 
     @property
     def arm(self):
         return self._arm_x
+
+    def get_position_wrs(self, end_effector_center_pos, end_effector_ceter_rotmat):
+        code, pose = self._arm_x.get_position(is_radian=True)
+        if code != 0:
+            raise Exception(f"The returned code of get_position is wrong! Code: {code}")
+        gl_flange_rot = np.array(rm.rotmat_from_euler(pose[3], pose[4], pose[5], order="sxyz"))
+        pos = np.array(pose[:3]) / 1000 + gl_flange_rot @ end_effector_center_pos
+        rot = gl_flange_rot @ end_effector_ceter_rotmat
+
+        return pos, rot
 
     def arm_get_jnt_values(self):
         code, jnt_values = self._arm_x.get_servo_angle(is_radian=True)
@@ -35,30 +46,47 @@ class XArmX(object):
             raise Exception(f"The returned code of get_servo_angle is wrong! Code: {code}")
         return np.asarray(jnt_values)
 
-    def arm_move_jspace_path(self,
-                             path,
-                             max_jntvel=None,
-                             max_jntacc=None,
-                             start_frame_id=1,
-                             ctrl_freq=.005):
-        """
-        :param path: [jnt_values0, jnt_values1, ...], results of motion planning
-        :param max_jntvel:
-        :param max_jntacc:
-        :param start_frame_id:
-        :return:
-        """
-        if not path or path is None:
-            raise ValueError("The given is incorrect!")
-        interp_time, interp_confs, interp_spds, interp_accs = pwp.time_optimal_trajectory_generation(path=path,
-                                                                                                     max_vels=max_jntvel,
-                                                                                                     max_accs=max_jntacc,
-                                                                                                     ctrl_freq=ctrl_freq)
-        interpolated_path = interp_confs[start_frame_id:]
-        for jnt_values in interpolated_path:
-            self._arm_x.set_servo_angle_j(jnt_values, is_radian=True)
-        return
+    def set_position_wrs(self, wrs_pose, end_effector_center_pos, end_effector_ceter_rotmat, speed=30):
+        if len(wrs_pose) != 2:
+            raise Exception(f"pose list format is wrong !!")
 
+        xarm_flange_rotmat = wrs_pose[1] @ end_effector_ceter_rotmat.T
+        xarm_flange_pos = wrs_pose[0] - xarm_flange_rotmat @ end_effector_center_pos
+        xarm_flange_pos = xarm_flange_pos*1000
+
+        euler = rm.rotmat_to_euler(xarm_flange_rotmat, order="sxyz")
+
+        print(f"tgt_pos:{xarm_flange_pos}")
+        print(f"tgt_euler:{euler}")
+        # self._arm_x.set_position(x=xarm_flange_pos[0], y=xarm_flange_pos[1], z=xarm_flange_pos[2], roll=euler[3],
+        #                          pitch=euler[4], yaw=euler[5], speed=speed,
+        #                          is_radian=True)
+
+    # def arm_move_jspace_path(self,
+    #                          path,
+    #                          max_jntvel=None,
+    #                          max_jntacc=None,
+    #                          start_frame_id=1,
+    #                          ctrl_freq=.005):
+    #     """
+    #     :param path: [jnt_values0, jnt_values1, ...], results of motion planning
+    #     :param max_jntvel:
+    #     :param max_jntacc:
+    #     :param start_frame_id:
+    #     :return:
+    #     """
+    #     if not path or path is None:
+    #         raise ValueError("The given is incorrect!")
+    #     interp_time, interp_confs, interp_spds, interp_accs = pwp.time_optimal_trajectory_generation(path=path,
+    #                                                                                                  max_vels=max_jntvel,
+    #                                                                                                  max_accs=max_jntacc,
+    #                                                                                                  ctrl_freq=ctrl_freq)
+    #     print(f"interp_confs:{interp_confs}")
+    #     # interpolated_path = interp_confs[start_frame_id:]
+    #     # print(f"interpolated_path:{interpolated_path}")
+    #     for jnt_values in interp_confs:
+    #         self._arm_x.set_servo_angle_j(jnt_values, mvtime=0.1,is_radian=True)
+    #     return
 
 # if __name__ == "__main__":
 #     import keyboard

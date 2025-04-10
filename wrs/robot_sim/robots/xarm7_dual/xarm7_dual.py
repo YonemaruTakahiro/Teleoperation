@@ -170,34 +170,37 @@ if __name__ == '__main__':
     base = wd.World(cam_pos=[2,1,1], lookat_pos=[0, 0, 0])
     mcm.mgm.gen_frame().attach_to(base)
     robot = XArm7Dual(enable_cc=True)
+    pos,rotmat=robot.fk(np.array([0,0,0,0,0,0,0]))
+    robot.goto_given_conf(jnt_values=np.array([0,0,0,0,0,0,0]))
+    mcm.mgm.gen_frame(pos=pos,rotmat=rotmat).attach_to(base)
     robot.gen_meshmodel(alpha=1, toggle_cdprim=True).attach_to(base)
     # robot.gen_stickmodel().attach_to(base)
     # robot.delegator.manipulator.jlc._ik_solver.test_success_rate()
-    # base.run()
+    base.run()
 
-    count = 0
-    # ik test
-    for i in tqdm(range(100)):
-        # rand_conf = robot.rand_conf()
-        # print(rand_conf, robot.delegator.manipulator.jnt_ranges)
-        # tgt_pos, tgt_rotmat = robot.fk(jnt_values=rand_conf)
-        tgt_pos = rm.vec(.4+0.1*i, -.3, .2)
-        tgt_rotmat = rm.rotmat_from_axangle([0, 0, 1], rm.pi)
-        mcm.mgm.gen_frame(pos=tgt_pos, rotmat=tgt_rotmat, ax_length=.3).attach_to(base)
-
-        tic = time.time()
-        jnt_values = robot.ik(tgt_pos, tgt_rotmat, toggle_dbg=False)
-        print(jnt_values)
-        toc = time.time()
-        if jnt_values is not None:
-            count += 1
-            robot.goto_given_conf(jnt_values=jnt_values)
-            robot.gen_meshmodel().attach_to(base)
-            # base.run()
-        # tic = time.time()
-        # result = robot.is_collided()
-        # toc = time.time()
-        # print(result, toc - tic)
-        # robot.show_cdprim()
-        print(count)
+    # count = 0
+    # # ik test
+    # for i in tqdm(range(100)):
+    #     # rand_conf = robot.rand_conf()
+    #     # print(rand_conf, robot.delegator.manipulator.jnt_ranges)
+    #     # tgt_pos, tgt_rotmat = robot.fk(jnt_values=rand_conf)
+    #     tgt_pos = rm.vec(.4+0.1*i, -.3, .2)
+    #     tgt_rotmat = rm.rotmat_from_axangle([0, 0, 1], rm.pi)
+    #     mcm.mgm.gen_frame(pos=tgt_pos, rotmat=tgt_rotmat, ax_length=.3).attach_to(base)
+    #
+    #     tic = time.time()
+    #     jnt_values = robot.ik(tgt_pos, tgt_rotmat, toggle_dbg=False)
+    #     print(jnt_values)
+    #     toc = time.time()
+    #     if jnt_values is not None:
+    #         count += 1
+    #         robot.goto_given_conf(jnt_values=jnt_values)
+    #         robot.gen_meshmodel().attach_to(base)
+    #         # base.run()
+    #     # tic = time.time()
+    #     # result = robot.is_collided()
+    #     # toc = time.time()
+    #     # print(result, toc - tic)
+    #     # robot.show_cdprim()
+    #     print(count)
     base.run()

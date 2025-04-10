@@ -12,6 +12,7 @@ def split_path_1d(path_1d):
     """
     zero_crossings = []
     distances = rm.np.diff(path_1d)#一回微分
+    print(f"dstances:{distances}")
     for i in range(len(distances) - 1):
         if rm.np.abs(distances[i]) < 1e-12:
             for j in range(i + 1, len(distances)):
@@ -88,7 +89,9 @@ def time_optimal_trajectory_generation(path, max_vels=None, max_accs=None, ctrl_
     time_intervals = rm.np.max(distances / avg_velocities, axis=1)#関節角の差を平均速度で割ってかかった時間を計算
     time = rm.np.zeros(len(path))
     time[1:] = rm.np.cumsum(time_intervals)
+    print(f"time[-1]:{time[-1]}")
     n_interp_conf = int(time[-1] / ctrl_freq) + 1
+    print(f"n_interp_conf:{n_interp_conf}")
     interp_time = rm.np.linspace(0, time[-1], n_interp_conf)
 
     interp_confs = rm.np.zeros((len(interp_time), path.shape[1]))

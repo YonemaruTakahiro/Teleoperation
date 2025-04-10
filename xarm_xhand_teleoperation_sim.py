@@ -192,11 +192,11 @@ def wrs(queue1: multiprocessing.Queue):
                 animation_data.tgt_rotmat = wilor_data.eef_rotmat
 
 
-
-                manipulator_jnt_values = robot.ik(animation_data.tgt_pos, animation_data.tgt_rotmat,
+                print(f"manipulator_joints:{animation_data.current_manipulator_jnt_values}")
+                manipulator_jnt_values = robot.realtime_ik(animation_data.tgt_pos, animation_data.tgt_rotmat,
                                                            seed_jnt_values=animation_data.current_manipulator_jnt_values,
                                                            toggle_dbg=False)
-                print(f"manipulator_jnt_value:{manipulator_jnt_values}")
+
                 if manipulator_jnt_values is None:
                     print("No IK solution found!")
                     animation_data.next_manipulator_jnt_values = animation_data.current_manipulator_jnt_values

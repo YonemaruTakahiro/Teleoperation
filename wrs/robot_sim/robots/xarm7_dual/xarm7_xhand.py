@@ -19,6 +19,7 @@ class XArm7XHR(sari.SglArmRobotInterface):
                                                     coupling_offset_pos=rm.zeros(3),
                                                     coupling_offset_rotmat=rm.rotmat_from_euler(0, 0, rm.pi),
                                                     name=name + "_eef")
+
         # tool center point
         self.manipulator.loc_tcp_pos = self.end_effector.loc_acting_center_pos
         self.manipulator.loc_tcp_rotmat = self.end_effector.loc_acting_center_rotmat

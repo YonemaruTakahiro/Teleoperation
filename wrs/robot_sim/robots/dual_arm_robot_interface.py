@@ -129,7 +129,8 @@ class DualArmRobotInterface(ri.RobotInterface):
             # self._delegator.backup_state()
             for jnt_values in candidates:
                 self._delegator.goto_given_conf(jnt_values=jnt_values)
-                if self.is_collided(obstacle_list=obstacle_list, toggle_contacts=False) or abnormal_jnts_change_detection(seed_jnt_values,jnt_values,threshold=np.pi):
+                print(f"self.is_collided(obstacle_list=obstacle_list, toggle_contacts=False):{self.is_collided(obstacle_list=obstacle_list, toggle_contacts=False)}")
+                if self.is_collided(obstacle_list=obstacle_list, toggle_contacts=False) or abnormal_jnts_change_detection(seed_jnt_values,jnt_values,threshold=np.pi/2):
                     continue
                 else:
                     result = jnt_values

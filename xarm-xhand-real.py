@@ -148,11 +148,8 @@ def wrs(queue1: multiprocessing.Queue):
     # xhexe = xhx.XHandX("/dev/ttyUSB0")
 
     start_manipulator_conf =robotx.arm_get_jnt_values()
-    if start_manipulator_conf[0]==0:
-        print(f"start_manipulator_conf:{start_manipulator_conf}")
-        start_manipulator_pos, start_manipulator_rotmat = robot.fk(np.array(start_manipulator_conf), toggle_jacobian=False)
-    else:
-        raise NotImplementedError
+    start_manipulator_pos, start_manipulator_rotmat = robot.fk(np.array(start_manipulator_conf), toggle_jacobian=False)
+
 
     start_xhand_jnts_values = np.array([0] * 12)
 
@@ -166,8 +163,8 @@ def wrs(queue1: multiprocessing.Queue):
 
     # robot.gen_stickmodel(toggle_tcp_frame=True, toggle_jnt_frames=True).attach_to(base)
 
-    animation_data = xhand_xarm_real_animation(start_manipulator_pos, start_manipulator_rotmat, np.radians(start_manipulator_conf),start_xhand_jnts_values)
-
+    animation_data = xhand_xarm_real_animation(start_manipulator_pos, start_manipulator_rotmat, start_manipulator_conf,start_xhand_jnts_values)
+    print(f"animation_data.current_manipulator_jnt_values:{animation_data.current_manipulator_jnt_values}")
 
     wilor_data = WiLor_Data()
     iter_idx = 0
@@ -195,15 +192,22 @@ def wrs(queue1: multiprocessing.Queue):
                 animation_data.tgt_pos = wilor_data.eef_pos
                 animation_data.tgt_rotmat = wilor_data.eef_rotmat
 
-
+                print(f"animation_data.current_manipulator_jnt_values:{animation_data.current_manipulator_jnt_values}")
                 manipulator_jnt_values = robot.realtime_ik(animation_data.tgt_pos, animation_data.tgt_rotmat,
                                                            seed_jnt_values=animation_data.current_manipulator_jnt_values,
                                                            toggle_dbg=False)
+
                 if manipulator_jnt_values is None:
                     print("No IK solution found!")
                     animation_data.next_manipulator_jnt_values = animation_data.current_manipulator_jnt_values
                 else:
                     animation_data.next_manipulator_jnt_values = manipulator_jnt_values
+                    robotx.arm_move_jspace_path(path=[animation_data.current_manipulator_jnt_values,
+                                                      animation_data.next_manipulator_jnt_values],
+                                                max_jntvel=rm.np.asarray([rm.pi / 6] * 7),
+                                                max_jntacc=rm.np.asarray([rm.pi / 3] * 7))  # 並列処理をしたほうがいいかも
+                #ikの解がなく現在と同じ関節位置を送るとオーバーシュートを起こす
+                # print(f"animation_data.next_manipulator_jnt_values:{animation_data.next_manipulator_jnt_values}")
 
                 animation_data.next_xhand_jnts_values = xhand_k.fingertip_ik_mapping_xhand(
                     human_hand_keypoints3d=wilor_data.keypoints_3d,
@@ -211,8 +215,6 @@ def wrs(queue1: multiprocessing.Queue):
                     seed_angles=animation_data.current_xhand_jnt_values)
 
 
-                robotx.arm_move_jspace_path(path=[animation_data.current_manipulator_jnt_values,animation_data.next_manipulator_jnt_values])#並列処理をしたほうがいいかも
-                # robotx.set_servo_angle_j(angles=animation_data.next_manipulator_jnt_values,mvtime=100,speed=np.radians(10),acc=np.radians(20),is_radian=True,wait=True)
                 # received_data = xhexe.goto_given_conf_and_get_hand_state(animation_data.next_xhand_jnts_values)
 
                 animation_data.current_pos,animation_data.current_rotmat=robot.fk(animation_data.next_manipulator_jnt_values)
