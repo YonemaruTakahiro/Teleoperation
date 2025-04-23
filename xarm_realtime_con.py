@@ -46,21 +46,36 @@ class xhand_XArmX(object):
             raise Exception(f"The returned code of get_servo_angle is wrong! Code: {code}")
         return np.asarray(jnt_values)
 
-    def set_position_wrs(self, wrs_pose, end_effector_center_pos, end_effector_ceter_rotmat, speed=30):
+    def set_position_wrs(self, wrs_pose, end_effector_center_pos, end_effector_ceter_rotmat, speed=None, mvtime=None,
+                         wait=True):
         if len(wrs_pose) != 2:
             raise Exception(f"pose list format is wrong !!")
 
         xarm_flange_rotmat = wrs_pose[1] @ end_effector_ceter_rotmat.T
         xarm_flange_pos = wrs_pose[0] - xarm_flange_rotmat @ end_effector_center_pos
-        xarm_flange_pos = xarm_flange_pos*1000
+        xarm_flange_pos = xarm_flange_pos * 1000
 
         euler = rm.rotmat_to_euler(xarm_flange_rotmat, order="sxyz")
 
-        print(f"tgt_pos:{xarm_flange_pos}")
-        print(f"tgt_euler:{euler}")
-        # self._arm_x.set_position(x=xarm_flange_pos[0], y=xarm_flange_pos[1], z=xarm_flange_pos[2], roll=euler[3],
-        #                          pitch=euler[4], yaw=euler[5], speed=speed,
-        #                          is_radian=True)
+        self._arm_x.set_position(x=xarm_flange_pos[0], y=xarm_flange_pos[1], z=xarm_flange_pos[2], roll=euler[0],
+                                 pitch=euler[1], yaw=euler[2], speed=speed, mvtime=mvtime,
+                                 is_radian=True, wait=wait)
+
+    def set_servo_cartesian_wrs(self, wrs_pose, end_effector_center_pos, end_effector_ceter_rotmat, speed=None,
+                                mvtime=None, wait=True):
+        if len(wrs_pose) != 2:
+            raise Exception(f"pose list format is wrong !!")
+
+        xarm_flange_rotmat = wrs_pose[1] @ end_effector_ceter_rotmat.T
+        xarm_flange_pos = wrs_pose[0] - xarm_flange_rotmat @ end_effector_center_pos
+        xarm_flange_pos = xarm_flange_pos * 1000
+
+        euler = rm.rotmat_to_euler(xarm_flange_rotmat, order="sxyz")
+
+        tgt_pose = [xarm_flange_pos[0], xarm_flange_pos[1], xarm_flange_pos[2], euler[0], euler[1], euler[2]]
+
+        self._arm_x.set_servo_cartesian(mvpose=tgt_pose, speed=speed, mvtime=mvtime,
+                                        is_radian=True, wait=wait)
 
     # def arm_move_jspace_path(self,
     #                          path,

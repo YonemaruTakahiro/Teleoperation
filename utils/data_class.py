@@ -78,7 +78,7 @@ class multi_finger_animation:
             return next_pos
 
 class xhand_xarm_real_animation:
-    def __init__(self, current_pos, current_rot,manipulator_jnt_values, xhand_jnt_values):
+    def __init__(self, current_pos=None, current_rot=None,manipulator_jnt_values=None, xhand_jnt_values=None):
         self.current_pos = current_pos
         self.current_rotmat = current_rot
         self.tgt_pos = None
@@ -107,6 +107,7 @@ class xhand_xarm_real_animation:
         e = np_verts1 - np_vert2
         e = np.square(e)
         e = np.sum(e)
+        e=np.sqrt(e)
         return e
 
     @staticmethod

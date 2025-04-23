@@ -217,7 +217,7 @@ class HandDetector_multifinger:
 
 
             ##平行移動
-            pos[0] += 0.4
+            pos[0] += 0.45
             pos[1] -= 0.3
             pos[2] -= 0.5
 
