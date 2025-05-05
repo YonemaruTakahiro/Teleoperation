@@ -1,9 +1,9 @@
-from hand_detector_multi_finger import HandDetector_multifinger
+from hand_detection_class.hand_detector_multi_finger import HandDetector_multifinger
 from utils.data_class import multi_finger_animation, WiLor_Data, Data, xhand_xarm_real_animation
-from xhand_class_ikpy import xhand_K
+from xhand.xhand_class_ikpy import xhand_K
 from utils.teleoperation_utils import abnormal_jnts_change_detection
 # import wrs.drivers.xarm.wrapper.xarm_api as xarm_api
-import xarm_realtime_con as xrc
+import xarm.xarm_realtime_con as xrc
 import pyrealsense2 as rs
 import multiprocessing
 import torch

@@ -1,5 +1,5 @@
-from hand_detector_multi_finger import HandDetector_multifinger
-from xhand_class_ikpy import xhand_K
+from hand_detection_class.hand_detector_multi_finger import HandDetector_multifinger
+from xhand.xhand_class_ikpy import xhand_K
 from utils.data_class import animation, WiLor_Data, Data
 from utils.keystroke_counter import (
     KeystrokeCounter, Key, KeyCode
